@@ -1,0 +1,7 @@
+{
+  "extends": "@remote-kanban/typescript-config/base",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": ["src/**/*.ts"]
+}
