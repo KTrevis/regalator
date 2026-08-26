@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { GitBranchIcon } from "lucide-react";
+import { AgentRunList } from "./components/AgentRunList";
 import { GitBranchList } from "./components/GitBranchList";
 import { Button } from "./components/ui/button";
 import {
@@ -36,10 +37,17 @@ export const App = () => {
         </SheetTrigger>
         <SheetContent>
           <SheetHeader></SheetHeader>
-          <div className="mx-3">
-            <GitBranchList
-              onBranchSelected={(branch) => switchBranch.mutate({ branch })}
-            />
+          <div className="mx-3 space-y-6">
+            <section className="space-y-2">
+              <h2 className="text-sm font-medium">Branches</h2>
+              <GitBranchList
+                onBranchSelected={(branch) => switchBranch.mutate({ branch })}
+              />
+            </section>
+            <section className="space-y-2">
+              <h2 className="text-sm font-medium">Agent runs</h2>
+              <AgentRunList />
+            </section>
           </div>
         </SheetContent>
       </Sheet>

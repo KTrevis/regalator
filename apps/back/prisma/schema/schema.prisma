@@ -1,0 +1,33 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum AgentRunStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model AgentRun {
+  id            String         @id @default(uuid())
+  notionPageId  String         @unique
+  notionTitle   String
+  notionUrl     String
+  piSessionId   String?
+  piSessionFile String?
+  branchName    String
+  worktreePath  String
+  status        AgentRunStatus @default(PENDING)
+  output        String?
+  error         String?
+  createdAt     DateTime       @default(now())
+  startedAt     DateTime?
+  completedAt   DateTime?
+  updatedAt     DateTime       @updatedAt
+}

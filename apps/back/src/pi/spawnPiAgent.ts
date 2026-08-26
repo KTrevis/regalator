@@ -3,7 +3,9 @@ import {
   ModelRuntime,
   SessionManager,
 } from "@earendil-works/pi-coding-agent";
+import { AgentRunStatus } from "../generated/prisma/enums";
 import { CONFIG } from "../config";
+import { prisma } from "../lib/prisma";
 
 let modelRuntimePromise: Promise<ModelRuntime> | undefined;
 
@@ -12,6 +14,7 @@ export type SpawnPiAgentInput = {
   description: string;
   cwd?: string;
   tools?: string[];
+  agentRunId?: string;
 };
 
 export type SpawnPiAgentResult = {
@@ -25,6 +28,7 @@ export async function spawnPiAgent({
   description,
   cwd = CONFIG.repoPath,
   tools = ["read", "bash", "edit", "write"],
+  agentRunId,
 }: SpawnPiAgentInput): Promise<SpawnPiAgentResult> {
   const modelRuntime = await getModelRuntime();
   const sessionManager = SessionManager.create(cwd);
@@ -36,6 +40,19 @@ export async function spawnPiAgent({
   });
 
   session.setSessionName(`Notion ticket: ${title}`);
+
+  if (agentRunId) {
+    await prisma.agentRun.update({
+      where: { id: agentRunId },
+      data: {
+        status: AgentRunStatus.RUNNING,
+        piSessionId: session.sessionId,
+        piSessionFile: session.sessionFile ?? null,
+        startedAt: new Date(),
+        error: null,
+      },
+    });
+  }
 
   let output = "";
 
@@ -51,11 +68,35 @@ export async function spawnPiAgent({
   try {
     await session.prompt(buildTicketPrompt({ title, description }));
 
+    if (agentRunId) {
+      await prisma.agentRun.update({
+        where: { id: agentRunId },
+        data: {
+          status: AgentRunStatus.COMPLETED,
+          output,
+          completedAt: new Date(),
+        },
+      });
+    }
+
     return {
       output,
       sessionFile: session.sessionFile,
       sessionId: session.sessionId,
     };
+  } catch (error) {
+    if (agentRunId) {
+      await prisma.agentRun.update({
+        where: { id: agentRunId },
+        data: {
+          status: AgentRunStatus.FAILED,
+          error: error instanceof Error ? error.message : "Pi agent failed",
+          completedAt: new Date(),
+        },
+      });
+    }
+
+    throw error;
   } finally {
     unsubscribe();
     session.dispose();
