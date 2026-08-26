@@ -39,7 +39,7 @@ export const SheetContent = ({
       {...props}
     >
       {children}
-      <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 outline-none transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring">
+      <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 outline-none transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring cursor-pointer">
         <XIcon className="size-4" />
         <span className="sr-only">Fermer</span>
       </SheetPrimitive.Close>
@@ -47,10 +47,7 @@ export const SheetContent = ({
   </SheetPortal>
 );
 
-export const SheetHeader = ({
-  className,
-  ...props
-}: ComponentProps<"div">) => (
+export const SheetHeader = ({ className, ...props }: ComponentProps<"div">) => (
   <div
     data-slot="sheet-header"
     className={cn("flex flex-col gap-1.5 p-6", className)}

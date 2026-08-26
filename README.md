@@ -17,6 +17,8 @@ Prérequis : Bun et Docker.
 
 ```sh
 bun install
+cp apps/back/.env.example apps/back/.env.local
+# Renseigner REPOSITORY_PATH avec un chemin absolu dans apps/back/.env.local
 bun run dev
 ```
 
