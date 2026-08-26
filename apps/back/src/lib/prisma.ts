@@ -10,7 +10,7 @@ const adapter = new PrismaLibSql({
 export const prisma = new PrismaClient({ adapter });
 
 function getDatabaseUrl() {
-  const url = Bun.env["DATABASE_URL"] ?? "file:./dev.db";
+  const url = "file:./dev.db";
 
   if (!url.startsWith("file:")) {
     return url;
