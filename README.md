@@ -1,75 +1,73 @@
 # Remote Kanban
 
-Monorepo Bun/Turbo pensé pour une base long terme :
+A Bun/Turbo monorepo designed as a long-term foundation:
 
-- `apps/front` : React, Vite, Tailwind CSS, TanStack Router, TanStack Query et client Eden.
-- `apps/back` : API Elysia.
-- `packages/shared` : types et utilitaires métier partagés.
-- `packages/typescript-config` : configurations TypeScript strictes communes.
+- `apps/front`: React, Vite, Tailwind CSS, TanStack Router, TanStack Query, and the Eden client.
+- `apps/back`: Elysia API.
+- `packages/shared`: shared schemas, types, and domain utilities.
+- `packages/typescript-config`: shared strict TypeScript configurations.
 
-## Types API safe
+## Safe API types
 
-Le back exporte uniquement `@remote-kanban/back/type`, qui pointe vers les déclarations de l'API et un runtime vide. Le client situé dans `apps/front/src/lib/eden.ts` importe uniquement `type { App }` pour Eden : le bundle front ne contient pas le code serveur.
+The back end only exports `@remote-kanban/back/type`, which points to the API declarations and an empty runtime module. The client in `apps/front/src/lib/eden.ts` only imports `type { App }` for Eden, so the front-end bundle does not contain server code.
 
-## Développement avec Caddy
+## Development with Caddy
 
-Prérequis : Bun et Docker.
+Requirements: Bun and Docker.
 
 ```sh
 bun install
-cp apps/back/.env.example apps/back/.env.local
-# Renseigner REPOSITORY_PATH avec un chemin absolu dans apps/back/.env.local
 bun run dev
 ```
 
-Cette commande démarre Caddy dans Docker, puis les applications avec Turbo :
+This starts Caddy in Docker and then runs the applications with Turbo:
 
-- Remote Kanban via Caddy : <http://embed.localhost>
-- Site hôte simulant l'intégration : <http://host.localhost>
-- Front Vite direct : <http://localhost:5173>
-- API Elysia directe : <http://localhost:3000>
+- Remote Kanban through Caddy: <http://embed.localhost>
+- Host site integration sandbox: <http://host.localhost>
+- Direct Vite front end: <http://localhost:5173>
+- Direct Elysia API: <http://localhost:3000>
 
-Caddy route `/api/*` vers Elysia et le reste vers Vite. Le client Eden utilise l'origine courante par défaut : aucune variable d'environnement n'est nécessaire avec Caddy.
+Caddy routes `/api/*` to Elysia and all other requests to Vite. The Eden client uses the current origin by default, so no environment variable is required when using Caddy.
 
-Le site hôte charge le script d'intégration minimal :
+The host site loads the minimal integration script:
 
 ```html
 <script async src="http://embed.localhost/embed.js"></script>
 ```
 
-Le script crée une iframe de la taille du badge, puis l'agrandit à la taille de l'écran pendant l'ouverture du drawer.
+The script creates a badge-sized iframe and expands it to fill the viewport while the drawer is open.
 
-Pour arrêter Caddy :
+Stop Caddy with:
 
 ```sh
 bun run dev:down
 ```
 
-Pour lancer les applications sans Caddy :
+Run the applications without Caddy with:
 
 ```sh
 bun run dev:apps
 ```
 
-Si le port 80 est occupé, créer `.env` à partir de `.env.example` et choisir un autre port :
+If port 80 is already in use, copy `.env.example` to `.env` and select another port:
 
 ```env
 CADDY_HTTP_PORT=8080
 ```
 
-L'application sera alors accessible sur `http://embed.localhost:8080`.
+The application will then be available at `http://embed.localhost:8080`.
 
-## Configuration de l'API côté front
+## Front-end API configuration
 
-Pour appeler exceptionnellement une autre origine, créer `apps/front/.env.local` :
+To call an API on another origin, create `apps/front/.env.local`:
 
 ```env
 VITE_API_URL=http://localhost:3000
 ```
 
-Les variables `VITE_*` sont publiques et injectées au build : elles ne doivent contenir aucun secret.
+`VITE_*` variables are public and embedded at build time. Never store secrets in them.
 
-## Vérifications
+## Verification
 
 ```sh
 bun run check-types

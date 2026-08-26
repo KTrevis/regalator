@@ -2,12 +2,18 @@ import { useState } from "react";
 import { GitBranchIcon } from "lucide-react";
 import { GitBranchList } from "./components/GitBranchList";
 import { Button } from "./components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "./components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTrigger,
+} from "./components/ui/sheet";
 import { notifyDrawerState } from "./lib/embed-frame";
-import { useGetHealth } from "./queries/health.query";
+import { useSwitchBranch } from "./queries/git.query";
 
 export const App = () => {
   const [open, setOpen] = useState(false);
+  const switchBranch = useSwitchBranch();
 
   const setDrawerOpen = (nextOpen: boolean) => {
     notifyDrawerState(nextOpen);
@@ -17,19 +23,23 @@ export const App = () => {
   return (
     <main className="remote-kanban-app">
       <Sheet open={open} onOpenChange={setDrawerOpen}>
-        <SheetTrigger asChild>
-          <Button
-            size="icon"
-            aria-label="Ouvrir Remote Kanban"
-            title="Remote Kanban"
-          >
-            <GitBranchIcon className="size-5" />
-          </Button>
+        <SheetTrigger
+          render={
+            <Button
+              size="icon"
+              aria-label="Open Remote Kanban"
+              title="Remote Kanban"
+            />
+          }
+        >
+          <GitBranchIcon className="size-5" />
         </SheetTrigger>
-
         <SheetContent>
-          <div className="space-y-4 px-6 py-6">
-            <GitBranchList />
+          <SheetHeader></SheetHeader>
+          <div className="mx-3">
+            <GitBranchList
+              onBranchSelected={(branch) => switchBranch.mutate({ branch })}
+            />
           </div>
         </SheetContent>
       </Sheet>
