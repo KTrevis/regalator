@@ -21,6 +21,13 @@ export type SpawnPiAgentInput = {
   agentRunId?: string;
   worktreePath?: string;
   notionPageId?: string;
+  sessionFile?: string;
+  images?: AgentImage[];
+};
+
+export type AgentImage = {
+  mediaType: "image/jpeg" | "image/png" | "image/gif" | "image/webp";
+  data: string;
 };
 
 export type SpawnPiAgentResult = {
@@ -37,8 +44,10 @@ export async function spawnPiAgent({
   agentRunId,
   worktreePath,
   notionPageId,
+  sessionFile,
+  images = [],
 }: SpawnPiAgentInput): Promise<SpawnPiAgentResult> {
-  const { session } = await createSession(cwd, tools);
+  const { session } = await createSession(cwd, tools, sessionFile);
   let output = "";
 
   session.setSessionName(`Notion ticket: ${title}`);
@@ -54,7 +63,16 @@ export async function spawnPiAgent({
   });
 
   try {
-    await session.prompt(buildTicketPrompt({ title, description }));
+    await session.prompt(
+      buildTicketPrompt(title, description, Boolean(sessionFile)),
+      {
+        images: images.map(({ mediaType, data }) => ({
+          type: "image" as const,
+          mimeType: mediaType,
+          data,
+        })),
+      },
+    );
     await cleanupCompletedWorktree(worktreePath, notionPageId);
     await markAgentRunAsCompleted(agentRunId, output);
 
@@ -72,12 +90,18 @@ export async function spawnPiAgent({
   }
 }
 
-async function createSession(cwd: string, tools: string[]) {
+async function createSession(
+  cwd: string,
+  tools: string[],
+  sessionFile: string | undefined,
+) {
   return createAgentSession({
     cwd,
     tools,
     modelRuntime: await getModelRuntime(),
-    sessionManager: SessionManager.create(cwd),
+    sessionManager: sessionFile
+      ? SessionManager.open(sessionFile)
+      : SessionManager.create(cwd),
   });
 }
 
@@ -103,6 +127,7 @@ function markAgentRunAsRunning(
       piSessionId: sessionId,
       piSessionFile: sessionFile ?? null,
       startedAt: new Date(),
+      completedAt: null,
       error: null,
     },
   });
@@ -150,7 +175,19 @@ function markAgentRunAsFailed(agentRunId: string | undefined, error: unknown) {
   });
 }
 
-function buildTicketPrompt({ title, description }: SpawnPiAgentInput) {
+function buildTicketPrompt(
+  title: string,
+  description: string,
+  isFollowUp: boolean,
+) {
+  if (isFollowUp) {
+    return `The user reviewed your work on "${title}" and requested these changes:
+
+${description}
+
+Implement the requested changes on the existing branch. Keep the current implementation unless the new instructions require changing it. Run the relevant checks and commit your changes before finishing.`;
+  }
+
   return `You received a Notion ticket.
 
 Title:

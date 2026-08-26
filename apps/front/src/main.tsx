@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { createRouter, RouterProvider } from '@tanstack/react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { EdenProvider, edenClient } from './lib/eden';
+import { TooltipProvider } from './components/ui/tooltip';
 import { routeTree } from './routeTree.gen';
 import './styles.css';
 
@@ -24,7 +25,9 @@ createRoot(root).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <EdenProvider client={edenClient} queryClient={queryClient}>
-        <RouterProvider router={router} />
+        <TooltipProvider>
+          <RouterProvider router={router} />
+        </TooltipProvider>
       </EdenProvider>
     </QueryClientProvider>
   </StrictMode>,
