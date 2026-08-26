@@ -1,4 +1,4 @@
-import { switchBranchSchema } from "@remote-kanban/shared";
+import { SWITCH_BRANCH_SCHEMA } from "@remote-kanban/shared";
 import { Elysia } from "elysia";
 import { CONFIG } from "../config";
 import { refreshBranches } from "../utils/git/refreshBranches";
@@ -18,6 +18,6 @@ export const GIT_ROUTES = new Elysia({ prefix: "/git" })
       };
     },
     {
-      body: switchBranchSchema,
+      body: SWITCH_BRANCH_SCHEMA,
     },
   );

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const switchBranchSchema = z.object({
+export const SWITCH_BRANCH_SCHEMA = z.object({
   branch: z
     .string()
     .trim()
@@ -8,4 +8,4 @@ export const switchBranchSchema = z.object({
     .max(255, "Branch name is too long"),
 });
 
-export type SwitchBranchInput = z.infer<typeof switchBranchSchema>;
+export type SwitchBranchInput = z.infer<typeof SWITCH_BRANCH_SCHEMA>;

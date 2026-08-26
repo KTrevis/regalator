@@ -1,1 +1,1 @@
-export { switchBranchSchema, type SwitchBranchInput } from "./git.schema";
+export { SWITCH_BRANCH_SCHEMA, type SwitchBranchInput } from "./git.schema";

@@ -1,1 +1,1 @@
-export { switchBranchSchema, type SwitchBranchInput } from "./schemas";
+export { SWITCH_BRANCH_SCHEMA, type SwitchBranchInput } from "./schemas";
