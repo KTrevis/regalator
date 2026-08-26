@@ -14,11 +14,12 @@ const supervisor = Bun.serve({
   async fetch(request) {
     const path = new URL(request.url).pathname;
 
-    if (
-      request.method === "GET" &&
-      ["/api/dev/restart-status", "/api/git/branch/switch"].includes(path)
-    ) {
-      return new Response(null, { status: switching ? 503 : 204 });
+    if (request.method === "GET" && path === "/api/dev/restart-status") {
+      return statusResponse(switching ? 503 : 204);
+    }
+
+    if (request.method === "GET" && path === "/api/git/branch/switch") {
+      return statusResponse(switching ? 503 : 200);
     }
 
     if (path !== "/api/git/branch/switch" || request.method !== "POST") {
@@ -41,6 +42,13 @@ const supervisor = Bun.serve({
     return Response.json({ branch }, { status: 202 });
   },
 });
+
+function statusResponse(status: number) {
+  return new Response(null, {
+    status,
+    headers: { "Access-Control-Allow-Origin": "*" },
+  });
+}
 
 for (const signal of ["SIGINT", "SIGTERM"] as const) {
   process.on(signal, () => void shutdown(signal));
