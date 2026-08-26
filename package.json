@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
-    "dev": "docker compose -f compose.dev.yml up -d caddy && turbo run dev",
+    "dev": "bun scripts/dev.ts",
     "dev:apps": "turbo run dev",
     "dev:proxy": "docker compose -f compose.dev.yml up -d caddy",
     "dev:down": "docker compose -f compose.dev.yml down",

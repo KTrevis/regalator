@@ -28,7 +28,11 @@ export function GitBranchList() {
   const canCheckout = Boolean(value && value !== currentBranch);
 
   return (
-    <Combobox items={branchNames} value={value} onValueChange={setSelectedBranch}>
+    <Combobox
+      items={branchNames}
+      value={value}
+      onValueChange={setSelectedBranch}
+    >
       <div className="flex gap-1">
         <ComboboxInput
           className="w-full"

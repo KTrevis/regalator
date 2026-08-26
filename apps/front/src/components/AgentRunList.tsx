@@ -12,11 +12,15 @@ export const AgentRunList = () => {
   const switchBranch = useSwitchBranch();
 
   if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Loading agent runs...</p>;
+    return (
+      <p className="text-sm text-muted-foreground">Loading agent runs...</p>
+    );
   }
 
   if (error) {
-    return <p className="text-sm text-destructive">Failed to load agent runs.</p>;
+    return (
+      <p className="text-sm text-destructive">Failed to load agent runs.</p>
+    );
   }
 
   if (agentRuns.length === 0) {
@@ -30,7 +34,9 @@ export const AgentRunList = () => {
           key={agentRun.id}
           agentRun={agentRun}
           checkoutPending={switchBranch.isPending}
-          onCheckout={() => switchBranch.mutate({ branch: agentRun.branchName })}
+          onCheckout={() =>
+            switchBranch.mutate({ branch: agentRun.branchName })
+          }
         />
       ))}
     </div>
