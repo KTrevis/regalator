@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Check, GitBranchIcon } from "lucide-react";
-import { useGetBranches } from "../queries/git.query";
+import { useGetBranches, useSwitchBranch } from "../queries/git.query";
 import { Button } from "./ui/button";
 import {
   Combobox,
@@ -12,12 +12,9 @@ import {
 } from "./ui/combobox";
 import { InputGroupAddon } from "./ui/input-group";
 
-export function GitBranchList({
-  onBranchSelected,
-}: {
-  onBranchSelected: (branch: string) => void;
-}) {
+export function GitBranchList() {
   const { data, isPending, isError } = useGetBranches();
+  const switchBranch = useSwitchBranch();
   const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
 
   const branches = data?.branches ?? [];
@@ -46,8 +43,8 @@ export function GitBranchList({
           )}
         </ComboboxInput>
         <Button
-          disabled={!canCheckout}
-          onClick={() => value && onBranchSelected(value)}
+          disabled={!canCheckout || switchBranch.isPending}
+          onClick={() => value && switchBranch.mutate({ branch: value })}
         >
           <Check />
         </Button>
@@ -67,6 +64,11 @@ export function GitBranchList({
           )}
         </ComboboxList>
       </ComboboxContent>
+      {switchBranch.error && (
+        <p className="mt-2 text-sm text-destructive">
+          {switchBranch.error.message}
+        </p>
+      )}
     </Combobox>
   );
 }

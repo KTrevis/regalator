@@ -10,11 +10,9 @@ import {
   SheetTrigger,
 } from "./components/ui/sheet";
 import { notifyDrawerState } from "./lib/embed-frame";
-import { useSwitchBranch } from "./queries/git.query";
 
 export const App = () => {
   const [open, setOpen] = useState(false);
-  const switchBranch = useSwitchBranch();
 
   const setDrawerOpen = (nextOpen: boolean) => {
     notifyDrawerState(nextOpen);
@@ -40,9 +38,7 @@ export const App = () => {
           <div className="mx-3 space-y-6">
             <section className="space-y-2">
               <h2 className="text-sm font-medium">Branches</h2>
-              <GitBranchList
-                onBranchSelected={(branch) => switchBranch.mutate({ branch })}
-              />
+              <GitBranchList />
             </section>
             <section className="space-y-2">
               <h2 className="text-sm font-medium">Agent runs</h2>

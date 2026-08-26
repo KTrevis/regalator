@@ -6,6 +6,7 @@ import {
 import { CONFIG } from "../config";
 import { AgentRunStatus } from "../generated/prisma/enums";
 import { prisma } from "../lib/prisma";
+import { commitWorktreeChanges } from "../utils/git/commitWorktreeChanges";
 import { removeWorktree } from "../utils/git/gitWorktrees";
 
 const DEFAULT_AGENT_TOOLS = ["read", "bash", "edit", "write"];
@@ -19,6 +20,7 @@ export type SpawnPiAgentInput = {
   tools?: string[];
   agentRunId?: string;
   worktreePath?: string;
+  notionPageId?: string;
 };
 
 export type SpawnPiAgentResult = {
@@ -34,6 +36,7 @@ export async function spawnPiAgent({
   tools = DEFAULT_AGENT_TOOLS,
   agentRunId,
   worktreePath,
+  notionPageId,
 }: SpawnPiAgentInput): Promise<SpawnPiAgentResult> {
   const { session } = await createSession(cwd, tools);
   let output = "";
@@ -52,7 +55,7 @@ export async function spawnPiAgent({
 
   try {
     await session.prompt(buildTicketPrompt({ title, description }));
-    await cleanupCompletedWorktree(worktreePath);
+    await cleanupCompletedWorktree(worktreePath, notionPageId);
     await markAgentRunAsCompleted(agentRunId, output);
 
     return {
@@ -105,10 +108,16 @@ function markAgentRunAsRunning(
   });
 }
 
-async function cleanupCompletedWorktree(worktreePath: string | undefined) {
-  if (worktreePath) {
-    await removeWorktree(CONFIG.repoPath, worktreePath);
+async function cleanupCompletedWorktree(
+  worktreePath: string | undefined,
+  notionPageId: string | undefined,
+) {
+  if (!worktreePath || !notionPageId) {
+    return;
   }
+
+  await commitWorktreeChanges(worktreePath, `notion(${notionPageId})`);
+  await removeWorktree(CONFIG.repoPath, worktreePath);
 }
 
 function markAgentRunAsCompleted(agentRunId: string | undefined, output: string) {

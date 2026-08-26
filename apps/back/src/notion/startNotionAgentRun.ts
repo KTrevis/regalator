@@ -44,6 +44,7 @@ export async function startNotionAgentRun(
     cwd: worktree.worktreePath,
     agentRunId: agentRun.id,
     worktreePath: worktree.worktreePath,
+    notionPageId: pageId,
   }).catch((error) => {
     console.error("Pi agent failed:", error);
   });
