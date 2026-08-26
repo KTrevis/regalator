@@ -9,4 +9,5 @@
  * 🟢 You can import this file directly.
  */
 export type * from './models/AgentRun'
+export type * from './models/AppSettings'
 export type * from './commonInputTypes'

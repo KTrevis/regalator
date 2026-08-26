@@ -24,7 +24,7 @@ export * as $Enums from './enums'
 export * from "./enums"
 /**
  * ## Prisma Client
- * 
+ *
  * Type-safe database client for TypeScript
  * @example
  * ```
@@ -34,7 +34,7 @@ export * from "./enums"
  * // Fetch zero or more AgentRuns
  * const agentRuns = await prisma.agentRun.findMany()
  * ```
- * 
+ *
  * Read more in our [docs](https://pris.ly/d/client).
  */
 export const PrismaClient = $Class.getPrismaClientClass()
@@ -46,3 +46,8 @@ export { Prisma }
  * 
  */
 export type AgentRun = Prisma.AgentRunModel
+/**
+ * Model AppSettings
+ *
+ */
+export type AppSettings = Prisma.AppSettingsModel

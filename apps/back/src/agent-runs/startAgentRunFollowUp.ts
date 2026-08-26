@@ -2,6 +2,7 @@ import { CONFIG } from "../config";
 import { AgentRunStatus } from "../generated/prisma/enums";
 import { prisma } from "../lib/prisma";
 import { type AgentImage, spawnPiAgent } from "../pi/spawnPiAgent";
+import { getDefaultBaseBranch } from "../settings/settings.service";
 import { createTaskWorktree } from "../utils/git/createTaskWorktree";
 import { getBranches } from "../utils/git/getBranches";
 
@@ -43,7 +44,7 @@ export async function startAgentRunFollowUp(
     worktreesPath: CONFIG.worktreesPath,
     taskId: agentRun.notionPageId,
     title: agentRun.notionTitle,
-    baseBranch: CONFIG.defaultBaseBranch,
+    baseBranch: await getDefaultBaseBranch(),
   });
 
   void spawnPiAgent({

@@ -31,3 +31,9 @@ model AgentRun {
   completedAt   DateTime?
   updatedAt     DateTime       @updatedAt
 }
+
+model AppSettings {
+  id                Int      @id @default(1)
+  defaultBaseBranch String   @default("main")
+  updatedAt         DateTime @updatedAt
+}

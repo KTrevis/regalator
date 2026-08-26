@@ -2,6 +2,7 @@ import { CONFIG } from "../config";
 import { AgentRunStatus } from "../generated/prisma/enums";
 import { prisma } from "../lib/prisma";
 import { spawnPiAgent } from "../pi/spawnPiAgent";
+import { getDefaultBaseBranch } from "../settings/settings.service";
 import { createTaskWorktree } from "../utils/git/createTaskWorktree";
 import { getPageDescription } from "./notion.page-description";
 import { getPageTitle } from "./notion.title";
@@ -18,7 +19,7 @@ export async function startNotionAgentRun(
     worktreesPath: CONFIG.worktreesPath,
     taskId: pageId,
     title,
-    baseBranch: CONFIG.defaultBaseBranch,
+    baseBranch: await getDefaultBaseBranch(),
   });
   const runningAgentRun = await getRunningAgentRun(pageId);
 
