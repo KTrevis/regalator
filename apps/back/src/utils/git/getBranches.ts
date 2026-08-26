@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import git from "isomorphic-git";
+import { listWorktreeBranches } from "./gitWorktrees";
 
 export interface GitBranch {
   readonly name: string;
@@ -12,7 +13,7 @@ export const getBranches = async (
   repositoryPath: string,
   remoteName = "origin",
 ): Promise<GitBranch[]> => {
-  const [currentBranch, localBranches, remoteBranches] = await Promise.all([
+  const [currentBranch, localBranches, remoteBranches, worktreeBranches] = await Promise.all([
     git.currentBranch({
       fs,
       dir: repositoryPath,
@@ -27,6 +28,7 @@ export const getBranches = async (
       dir: repositoryPath,
       remote: remoteName,
     }),
+    listWorktreeBranches(repositoryPath),
   ]);
 
   const localBranchNames = new Set(localBranches);
@@ -35,7 +37,7 @@ export const getBranches = async (
   );
 
   return Array.from(
-    new Set([...localBranchNames, ...remoteBranchNames]),
+    new Set([...localBranchNames, ...remoteBranchNames].filter((name) => !worktreeBranches.has(name))),
     (name): GitBranch => ({
       name,
       current: name === currentBranch,

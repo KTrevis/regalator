@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Check, GitBranchIcon } from "lucide-react";
 import { useGetBranches } from "../queries/git.query";
+import { Button } from "./ui/button";
 import {
   Combobox,
   ComboboxContent,
@@ -10,7 +11,6 @@ import {
   ComboboxList,
 } from "./ui/combobox";
 import { InputGroupAddon } from "./ui/input-group";
-import { Button } from "./ui/button";
 
 export function GitBranchList({
   onBranchSelected,
@@ -23,16 +23,15 @@ export function GitBranchList({
   const branches = data?.branches ?? [];
   const branchNames = branches.map((branch) => branch.name);
   const currentBranch = branches.find((branch) => branch.current)?.name ?? null;
-  const value = branchNames.includes(selectedBranch ?? "")
-    ? selectedBranch
-    : currentBranch;
+  const branchToCheckout = selectedBranch ?? currentBranch;
+  const selectedBranchExists = branchToCheckout
+    ? branchNames.includes(branchToCheckout)
+    : false;
+  const value = selectedBranchExists ? branchToCheckout : currentBranch;
+  const canCheckout = Boolean(value && value !== currentBranch);
 
   return (
-    <Combobox
-      items={branchNames}
-      value={value}
-      onValueChange={(branch) => setSelectedBranch(branch)}
-    >
+    <Combobox items={branchNames} value={value} onValueChange={setSelectedBranch}>
       <div className="flex gap-1">
         <ComboboxInput
           className="w-full"
@@ -47,11 +46,8 @@ export function GitBranchList({
           )}
         </ComboboxInput>
         <Button
-          onClick={() =>
-            selectedBranch !== currentBranch &&
-            selectedBranch &&
-            onBranchSelected(selectedBranch)
-          }
+          disabled={!canCheckout}
+          onClick={() => value && onBranchSelected(value)}
         >
           <Check />
         </Button>
