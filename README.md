@@ -34,7 +34,7 @@ pnpm db:migrate:deploy
 
 ## Start script
 
-The start script is the long-running managed project process. It should use `exec` so the supervisor can stop it cleanly.
+The start script is the long-running managed project process. It should use `exec` so Remote Kanban can stop it cleanly.
 
 ```sh
 #!/bin/sh
@@ -43,6 +43,6 @@ set -eu
 exec pnpm dev
 ```
 
-Remote Kanban itself remains running during branch switches. The supervisor only stops and restarts the managed project.
+Remote Kanban itself remains running during branch switches. Its backend stops and restarts the managed project.
 
 Both scripts are versioned by the managed project. Changes to them execute arbitrary code and must therefore require deployment permissions.

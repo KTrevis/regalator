@@ -82,12 +82,6 @@
         return;
       if (event.data?.source !== "remote-kanban") return;
 
-      if (event.data.type === "app:restarting") {
-        showRestarting();
-        void reloadAfterRestart(frameUrl);
-        return;
-      }
-
       if (event.data.type === "launcher:move") {
         if (
           !drawerOpen &&
@@ -148,45 +142,6 @@
       localStorage.setItem(launcherPositionKey, JSON.stringify(position));
     } catch {
       // The launcher remains draggable when host storage is unavailable.
-    }
-  };
-
-  const showRestarting = () => {
-    const status = document.createElement("div");
-    status.textContent = "Switching branch…";
-    status.setAttribute("role", "status");
-    status.style.cssText = [
-      "position:fixed",
-      "inset:50% auto auto 50%",
-      "transform:translate(-50%,-50%)",
-      "padding:12px 18px",
-      "border-radius:999px",
-      "background:#172554",
-      "color:white",
-      "font:600 14px system-ui,sans-serif",
-      "box-shadow:0 8px 24px #0003",
-      "z-index:2147483647",
-    ].join(";");
-    document.body.append(status);
-  };
-
-  const reloadAfterRestart = async (frameUrl) => {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    for (let attempt = 0; attempt < 120; attempt += 1) {
-      const ready = await fetch(
-        new URL("/api/dev/restart-status", frameUrl),
-      ).then(
-        (response) => response.ok,
-        () => false,
-      );
-
-      if (ready) {
-        window.location.reload();
-        return;
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, 250));
     }
   };
 

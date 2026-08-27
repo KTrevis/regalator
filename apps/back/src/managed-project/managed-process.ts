@@ -4,7 +4,7 @@ const READY_TIMEOUT_MS = 30_000;
 
 export type ManagedProjectProcess = ReturnType<typeof Bun.spawn>;
 
-export function startManagedProject(repositoryPath: string) {
+export function spawnManagedProject(repositoryPath: string) {
   const configuredScriptPath = Bun.env["REMOTE_KANBAN_START_SCRIPT"];
   if (!configuredScriptPath) return;
 
@@ -17,7 +17,7 @@ export function startManagedProject(repositoryPath: string) {
   });
 }
 
-export async function stopManagedProject(
+export async function stopManagedProjectProcess(
   process: ManagedProjectProcess | undefined,
   signal: "SIGINT" | "SIGTERM" = "SIGTERM",
 ) {
@@ -27,7 +27,7 @@ export async function stopManagedProject(
   await process.exited;
 }
 
-export async function waitForManagedProject(
+export async function waitForManagedProjectReady(
   process: ManagedProjectProcess | undefined,
 ) {
   const backendUrl = Bun.env["REMOTE_KANBAN_BACKEND_URL"];

@@ -1,7 +1,7 @@
 export type EmbedFrameMessage =
   | {
       readonly source: "remote-kanban";
-      readonly type: "app:restarting" | "drawer:open" | "drawer:close";
+      readonly type: "drawer:open" | "drawer:close";
     }
   | {
       readonly source: "remote-kanban";
@@ -61,14 +61,4 @@ export const subscribeToHostDrawerClose = (
 
   window.addEventListener("message", handleMessage);
   return () => window.removeEventListener("message", handleMessage);
-};
-
-export const notifyAppRestarting = (): void => {
-  window.parent.postMessage(
-    {
-      source: "remote-kanban",
-      type: "app:restarting",
-    } satisfies EmbedFrameMessage,
-    getHostOrigin(),
-  );
 };
