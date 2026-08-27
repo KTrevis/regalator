@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEden } from "../lib/eden";
 
 export const useGetAgentRuns = () => {
@@ -8,4 +8,15 @@ export const useGetAgentRuns = () => {
     ...eden.api["agent-runs"].get.queryOptions(),
     refetchInterval: 2_000,
   });
+};
+
+export const useDeleteAgentRun = (agentRunId: string) => {
+  const eden = useEden();
+  const queryClient = useQueryClient();
+
+  return useMutation(
+    eden.api["agent-runs"]({ id: agentRunId }).delete.mutationOptions({
+      onSuccess: () => queryClient.invalidateQueries(),
+    }),
+  );
 };

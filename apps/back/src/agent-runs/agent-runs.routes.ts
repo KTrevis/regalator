@@ -1,4 +1,5 @@
 import { Elysia, t } from "elysia";
+import { AgentRunStatus } from "../generated/prisma/enums";
 import { prisma } from "../lib/prisma";
 import { startAgentRunFollowUp } from "./startAgentRunFollowUp";
 
@@ -7,6 +8,34 @@ export const AGENT_RUNS_ROUTES = new Elysia({ prefix: "/agent-runs" })
     prisma.agentRun.findMany({
       orderBy: { updatedAt: "desc" },
     }),
+  )
+  .delete(
+    "/:id",
+    async ({ params, set }) => {
+      const agentRun = await prisma.agentRun.findUnique({
+        where: { id: params.id },
+        select: { status: true },
+      });
+
+      if (!agentRun) {
+        set.status = 404;
+        return { message: "Agent run not found." };
+      }
+
+      if (
+        agentRun.status === AgentRunStatus.PENDING ||
+        agentRun.status === AgentRunStatus.RUNNING
+      ) {
+        set.status = 409;
+        return { message: "An active agent run cannot be deleted." };
+      }
+
+      await prisma.agentRun.delete({ where: { id: params.id } });
+      return { deleted: true as const };
+    },
+    {
+      params: t.Object({ id: t.String() }),
+    },
   )
   .post(
     "/:id/instructions",

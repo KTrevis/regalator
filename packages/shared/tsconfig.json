@@ -1,5 +1,5 @@
 {
-  "extends": "@remote-kanban/typescript-config/base",
+  "extends": "@regalator/typescript-config/base",
   "compilerOptions": {
     "noEmit": true
   },

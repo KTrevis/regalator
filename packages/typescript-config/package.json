@@ -1,5 +1,5 @@
 {
-  "name": "@remote-kanban/typescript-config",
+  "name": "@regalator/typescript-config",
   "version": "0.0.0",
   "private": true,
   "exports": {

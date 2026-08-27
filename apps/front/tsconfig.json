@@ -1,5 +1,5 @@
 {
-  "extends": "@remote-kanban/typescript-config/react",
+  "extends": "@regalator/typescript-config/react",
   "compilerOptions": {
     "noEmit": true,
     "paths": {

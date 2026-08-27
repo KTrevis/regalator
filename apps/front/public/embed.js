@@ -6,18 +6,18 @@
   const launcherSize = 32;
   const launcherMargin = 12;
   const drawerWidth = 384;
-  const launcherPositionKey = "remote-kanban-launcher-position";
+  const launcherPositionKey = "regalator-launcher-position";
 
   const mount = () => {
-    if (document.querySelector("[data-remote-kanban-frame]")) return;
+    if (document.querySelector("[data-regalator-frame]")) return;
 
     const frameUrl = new URL(script.dataset.appUrl || "/", script.src);
     frameUrl.searchParams.set("hostOrigin", window.location.origin);
 
     const iframe = document.createElement("iframe");
-    iframe.dataset.remoteKanbanFrame = "";
+    iframe.dataset.regalatorFrame = "";
     iframe.src = frameUrl.toString();
-    iframe.title = "Remote Kanban";
+    iframe.title = "Regalator";
     iframe.setAttribute("allowtransparency", "true");
     iframe.style.cssText = [
       "position:fixed",
@@ -30,7 +30,7 @@
     iframe.style.setProperty("outline", "none", "important");
 
     const overlay = document.createElement("div");
-    overlay.dataset.remoteKanbanOverlay = "";
+    overlay.dataset.regalatorOverlay = "";
     overlay.hidden = true;
     overlay.style.cssText = [
       "position:fixed",
@@ -41,13 +41,17 @@
     ].join(";");
     overlay.addEventListener("click", () => {
       iframe.contentWindow?.postMessage(
-        { source: "remote-kanban-host", type: "drawer:close" },
+        { source: "regalator-host", type: "drawer:close" },
         frameUrl.origin,
       );
     });
 
     let drawerOpen = false;
     let launcherPosition = readLauncherPosition();
+    let dragOrigin = null;
+    let dragPointerOrigin = null;
+    let pendingDragPosition = null;
+    let dragAnimationFrame = null;
 
     const placeLauncher = () => {
       iframe.style.width = `${launcherSize}px`;
@@ -64,12 +68,42 @@
       iframe.style.top = `${launcherPosition.y}px`;
     };
 
-    const moveLauncher = (deltaX, deltaY) => {
-      const frameRect = iframe.getBoundingClientRect();
-      launcherPosition = clampLauncherPosition({
-        x: frameRect.left + deltaX,
-        y: frameRect.top + deltaY,
+    const applyDragPosition = () => {
+      dragAnimationFrame = null;
+      if (!dragOrigin || !pendingDragPosition) return;
+
+      iframe.style.transform = `translate3d(${pendingDragPosition.x - dragOrigin.x}px, ${pendingDragPosition.y - dragOrigin.y}px, 0)`;
+    };
+
+    const dragLauncher = ({ active, pointerX, pointerY }) => {
+      if (!dragOrigin) {
+        const frameRect = iframe.getBoundingClientRect();
+        dragOrigin = { x: frameRect.left, y: frameRect.top };
+        dragPointerOrigin = { x: pointerX, y: pointerY };
+        launcherPosition = dragOrigin;
+        placeLauncher();
+      }
+
+      pendingDragPosition = clampLauncherPosition({
+        x: dragOrigin.x + pointerX - dragPointerOrigin.x,
+        y: dragOrigin.y + pointerY - dragPointerOrigin.y,
       });
+
+      if (dragAnimationFrame === null) {
+        dragAnimationFrame = requestAnimationFrame(applyDragPosition);
+      }
+
+      if (active) return;
+
+      if (dragAnimationFrame !== null) {
+        cancelAnimationFrame(dragAnimationFrame);
+        dragAnimationFrame = null;
+      }
+      launcherPosition = pendingDragPosition;
+      dragOrigin = null;
+      dragPointerOrigin = null;
+      pendingDragPosition = null;
+      iframe.style.transform = "";
       saveLauncherPosition(launcherPosition);
       placeLauncher();
     };
@@ -80,15 +114,16 @@
         event.source !== iframe.contentWindow
       )
         return;
-      if (event.data?.source !== "remote-kanban") return;
+      if (event.data?.source !== "regalator") return;
 
-      if (event.data.type === "launcher:move") {
+      if (event.data.type === "launcher:drag") {
         if (
           !drawerOpen &&
-          Number.isFinite(event.data.deltaX) &&
-          Number.isFinite(event.data.deltaY)
+          typeof event.data.active === "boolean" &&
+          Number.isFinite(event.data.pointerX) &&
+          Number.isFinite(event.data.pointerY)
         ) {
-          moveLauncher(event.data.deltaX, event.data.deltaY);
+          dragLauncher(event.data);
         }
         return;
       }

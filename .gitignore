@@ -32,4 +32,4 @@ yarn-error.log*
 .env
 *.pem
 notion-token.txt
-.remote-kanban/
+.regalator/

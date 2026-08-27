@@ -1,5 +1,5 @@
 import { treaty, type Treaty } from "@elysiajs/eden";
-import type { App } from "@remote-kanban/back/type";
+import type { App } from "@regalator/back/type";
 import {
   createEdenTanStackQuery,
   type CreateEdenTanStackQueryResult,

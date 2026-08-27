@@ -29,7 +29,7 @@ export const App = () => {
   useEffect(() => subscribeToHostDrawerClose(() => setDrawerOpen(false)), []);
 
   return (
-    <main className="remote-kanban-app">
+    <main className="regalator-app">
       <Sheet open={open} onOpenChange={setDrawerOpen}>
         <DraggableLauncher onOpen={() => setDrawerOpen(true)} />
         <SheetContent className="!w-full !max-w-none">

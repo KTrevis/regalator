@@ -106,13 +106,13 @@
   }
 }
 
-.remote-kanban-app {
+.regalator-app {
   @apply relative h-full w-full bg-transparent font-sans text-foreground antialiased;
 
   color-scheme: light;
 }
 
-.remote-kanban-app > button {
+.regalator-app > button {
   @apply fixed inset-0;
 }
 

@@ -1,17 +1,18 @@
 export type EmbedFrameMessage =
   | {
-      readonly source: "remote-kanban";
+      readonly source: "regalator";
       readonly type: "drawer:open" | "drawer:close";
     }
   | {
-      readonly source: "remote-kanban";
-      readonly type: "launcher:move";
-      readonly deltaX: number;
-      readonly deltaY: number;
+      readonly source: "regalator";
+      readonly type: "launcher:drag";
+      readonly active: boolean;
+      readonly pointerX: number;
+      readonly pointerY: number;
     };
 
 type HostFrameMessage = {
-  readonly source: "remote-kanban-host";
+  readonly source: "regalator-host";
   readonly type: "drawer:close";
 };
 
@@ -25,20 +26,25 @@ const getHostOrigin = (): string => {
 
 export const notifyDrawerState = (open: boolean): void => {
   const message: EmbedFrameMessage = {
-    source: "remote-kanban",
+    source: "regalator",
     type: open ? "drawer:open" : "drawer:close",
   };
 
   window.parent.postMessage(message, getHostOrigin());
 };
 
-export const notifyLauncherMove = (deltaX: number, deltaY: number): void => {
+export const notifyLauncherDrag = (
+  active: boolean,
+  pointerX: number,
+  pointerY: number,
+): void => {
   window.parent.postMessage(
     {
-      source: "remote-kanban",
-      type: "launcher:move",
-      deltaX,
-      deltaY,
+      source: "regalator",
+      type: "launcher:drag",
+      active,
+      pointerX,
+      pointerY,
     } satisfies EmbedFrameMessage,
     getHostOrigin(),
   );
@@ -52,7 +58,7 @@ export const subscribeToHostDrawerClose = (
     if (event.source !== window.parent) return;
     if (hostOrigin !== "*" && event.origin !== hostOrigin) return;
     if (
-      event.data?.source === "remote-kanban-host" &&
+      event.data?.source === "regalator-host" &&
       event.data.type === "drawer:close"
     ) {
       onClose();

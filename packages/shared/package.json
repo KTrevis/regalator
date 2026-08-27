@@ -1,5 +1,5 @@
 {
-  "name": "@remote-kanban/shared",
+  "name": "@regalator/shared",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -17,6 +17,6 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@remote-kanban/typescript-config": "workspace:*"
+    "@regalator/typescript-config": "workspace:*"
   }
 }

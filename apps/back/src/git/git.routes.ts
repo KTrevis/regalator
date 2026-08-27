@@ -1,4 +1,4 @@
-import { SWITCH_BRANCH_SCHEMA } from "@remote-kanban/shared";
+import { SWITCH_BRANCH_SCHEMA } from "@regalator/shared";
 import { Elysia } from "elysia";
 import { CONFIG } from "../config";
 import { switchManagedProjectBranch } from "../managed-project/managed-project.service";

@@ -4,8 +4,12 @@ import {
   GitBranchIcon,
   LoaderCircle,
   MessageCircleIcon,
+  Trash2Icon,
 } from "lucide-react";
-import { useGetAgentRuns } from "../queries/agent-runs.query";
+import {
+  useDeleteAgentRun,
+  useGetAgentRuns,
+} from "../queries/agent-runs.query";
 import { useGetBranches, useSwitchBranch } from "../queries/git.query";
 import { AgentInstructionsSheet } from "./AgentInstructionsSheet";
 import { Button } from "./ui/button";
@@ -121,6 +125,18 @@ function AgentRunStatusActions({
   onCheckout: () => void;
 }) {
   const [instructionsOpen, setInstructionsOpen] = useState(false);
+  const deleteAgentRun = useDeleteAgentRun(agentRunId);
+  const canDelete = !RUNNING_STATUSES.has(status);
+
+  const handleDelete = () => {
+    if (
+      window.confirm(
+        `Delete the agent run for "${title}"? This action cannot be undone.`,
+      )
+    ) {
+      deleteAgentRun.mutate();
+    }
+  };
 
   return (
     <div className="flex shrink-0 items-start gap-2 text-xs text-muted-foreground">
@@ -129,7 +145,7 @@ function AgentRunStatusActions({
           <LoaderCircle className="size-4 animate-spin" />
         )}
       </div>
-      {status === "COMPLETED" && (
+      {canDelete && (
         <div className="flex flex-col gap-1">
           <DropdownMenu>
             <DropdownMenuTrigger
@@ -145,26 +161,41 @@ function AgentRunStatusActions({
               <EllipsisVerticalIcon className="size-3" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-auto">
-              <Tooltip>
-                <TooltipTrigger render={<div />}>
+              {status === "COMPLETED" && (
+                <>
+                  <Tooltip>
+                    <TooltipTrigger render={<div />}>
+                      <DropdownMenuItem
+                        disabled={branchCheckedOut}
+                        onClick={() => setInstructionsOpen(true)}
+                      >
+                        <MessageCircleIcon />
+                        Give new instructions
+                      </DropdownMenuItem>
+                    </TooltipTrigger>
+                    {branchCheckedOut && (
+                      <TooltipContent side="left">
+                        This branch is currently checked out. Switch to another
+                        branch before giving new instructions.
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
                   <DropdownMenuItem
-                    disabled={branchCheckedOut}
-                    onClick={() => setInstructionsOpen(true)}
+                    disabled={checkoutPending}
+                    onClick={onCheckout}
                   >
-                    <MessageCircleIcon />
-                    Give new instructions
+                    <GitBranchIcon />
+                    Switch to branch
                   </DropdownMenuItem>
-                </TooltipTrigger>
-                {branchCheckedOut && (
-                  <TooltipContent side="left">
-                    This branch is currently checked out. Switch to another
-                    branch before giving new instructions.
-                  </TooltipContent>
-                )}
-              </Tooltip>
-              <DropdownMenuItem disabled={checkoutPending} onClick={onCheckout}>
-                <GitBranchIcon />
-                Switch to branch
+                </>
+              )}
+              <DropdownMenuItem
+                variant="destructive"
+                disabled={deleteAgentRun.isPending}
+                onClick={handleDelete}
+              >
+                <Trash2Icon />
+                Delete run
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

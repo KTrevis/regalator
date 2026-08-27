@@ -1,14 +1,14 @@
-import { resolve } from "node:path";
+import { getManagedProjectScriptPath } from "./managed-project-scripts";
 
 const READY_TIMEOUT_MS = 30_000;
 
 export type ManagedProjectProcess = ReturnType<typeof Bun.spawn>;
 
 export function spawnManagedProject(repositoryPath: string) {
-  const configuredScriptPath = Bun.env["REMOTE_KANBAN_START_SCRIPT"];
-  if (!configuredScriptPath) return;
+  const startScriptPath = getManagedProjectScriptPath(repositoryPath, "start");
+  if (!startScriptPath) return;
 
-  return Bun.spawn(["/bin/sh", resolve(repositoryPath, configuredScriptPath)], {
+  return Bun.spawn(["/bin/sh", startScriptPath], {
     cwd: repositoryPath,
     env: process.env,
     stdin: "inherit",
@@ -30,7 +30,7 @@ export async function stopManagedProjectProcess(
 export async function waitForManagedProjectReady(
   process: ManagedProjectProcess | undefined,
 ) {
-  const backendUrl = Bun.env["REMOTE_KANBAN_BACKEND_URL"];
+  const backendUrl = Bun.env["REGALATOR_BACKEND_URL"];
 
   if (!backendUrl) {
     await Bun.sleep(100);

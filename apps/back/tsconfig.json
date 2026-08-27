@@ -1,5 +1,5 @@
 {
-  "extends": "@remote-kanban/typescript-config/bun",
+  "extends": "@regalator/typescript-config/bun",
   "compilerOptions": {
     "noEmit": true
   },
