@@ -13,7 +13,7 @@ const DEFAULT_AGENT_TOOLS = ["read", "bash", "edit", "write"];
 
 let modelRuntimePromise: Promise<ModelRuntime> | undefined;
 
-export type SpawnPiAgentInput = {
+type PiAgentInput = {
   title: string;
   description: string;
   cwd?: string;
@@ -30,13 +30,13 @@ export type AgentImage = {
   data: string;
 };
 
-export type SpawnPiAgentResult = {
-  output: string;
-  sessionFile: string | undefined;
-  sessionId: string;
-};
+export function startPiAgent(input: PiAgentInput, label = "Pi agent") {
+  void runPiAgent(input).catch((error) =>
+    console.error(`${label} failed:`, error),
+  );
+}
 
-export async function spawnPiAgent({
+async function runPiAgent({
   title,
   description,
   cwd = CONFIG.repoPath,
@@ -46,12 +46,16 @@ export async function spawnPiAgent({
   notionPageId,
   sessionFile,
   images = [],
-}: SpawnPiAgentInput): Promise<SpawnPiAgentResult> {
+}: PiAgentInput) {
   const { session } = await createSession(cwd, tools, sessionFile);
   let output = "";
 
   session.setSessionName(`Notion ticket: ${title}`);
-  await markAgentRunAsRunning(agentRunId, session.sessionId, session.sessionFile);
+  await markAgentRunAsRunning(
+    agentRunId,
+    session.sessionId,
+    session.sessionFile,
+  );
 
   const unsubscribe = session.subscribe((event) => {
     if (
@@ -75,12 +79,6 @@ export async function spawnPiAgent({
     );
     await cleanupCompletedWorktree(worktreePath, notionPageId);
     await markAgentRunAsCompleted(agentRunId, output);
-
-    return {
-      output,
-      sessionFile: session.sessionFile,
-      sessionId: session.sessionId,
-    };
   } catch (error) {
     await markAgentRunAsFailed(agentRunId, error);
     throw error;
@@ -145,7 +143,10 @@ async function cleanupCompletedWorktree(
   await removeWorktree(CONFIG.repoPath, worktreePath);
 }
 
-function markAgentRunAsCompleted(agentRunId: string | undefined, output: string) {
+function markAgentRunAsCompleted(
+  agentRunId: string | undefined,
+  output: string,
+) {
   if (!agentRunId) {
     return;
   }

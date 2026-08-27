@@ -1,6 +1,6 @@
 import { Elysia, t } from "elysia";
-import { AgentRunStatus } from "../generated/prisma/enums";
 import { prisma } from "../lib/prisma";
+import { isAgentRunActive } from "./agent-run-status";
 import { startAgentRunFollowUp } from "./startAgentRunFollowUp";
 
 export const AGENT_RUNS_ROUTES = new Elysia({ prefix: "/agent-runs" })
@@ -22,10 +22,7 @@ export const AGENT_RUNS_ROUTES = new Elysia({ prefix: "/agent-runs" })
         return { message: "Agent run not found." };
       }
 
-      if (
-        agentRun.status === AgentRunStatus.PENDING ||
-        agentRun.status === AgentRunStatus.RUNNING
-      ) {
+      if (isAgentRunActive(agentRun.status)) {
         set.status = 409;
         return { message: "An active agent run cannot be deleted." };
       }

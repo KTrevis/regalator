@@ -1,7 +1,8 @@
+import { ACTIVE_AGENT_RUN_STATUSES } from "../agent-runs/agent-run-status";
 import { CONFIG } from "../config";
 import { AgentRunStatus } from "../generated/prisma/enums";
 import { prisma } from "../lib/prisma";
-import { spawnPiAgent } from "../pi/spawnPiAgent";
+import { startPiAgent } from "../pi/startPiAgent";
 import { getDefaultBaseBranch } from "../settings/settings.service";
 import { createTaskWorktree } from "../utils/git/createTaskWorktree";
 import { getPageDescription } from "./notion.page-description";
@@ -48,15 +49,13 @@ export async function startNotionAgentRun(webhookBody: NotionPageWebhook) {
     worktreePath: worktree.worktreePath,
   });
 
-  void spawnPiAgent({
+  startPiAgent({
     title,
     description,
     cwd: worktree.worktreePath,
     agentRunId: agentRun.id,
     worktreePath: worktree.worktreePath,
     notionPageId: pageId,
-  }).catch((error) => {
-    console.error("Pi agent failed:", error);
   });
 
   return {
@@ -70,7 +69,7 @@ function getRunningAgentRun(notionPageId: string) {
   return prisma.agentRun.findFirst({
     where: {
       notionPageId,
-      status: { in: [AgentRunStatus.PENDING, AgentRunStatus.RUNNING] },
+      status: { in: ACTIVE_AGENT_RUN_STATUSES },
     },
   });
 }

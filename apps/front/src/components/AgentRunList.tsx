@@ -59,6 +59,8 @@ function AgentRunCard({
   branchCheckedOut: boolean;
   onCheckout: () => void;
 }) {
+  const isRunning = RUNNING_STATUSES.has(agentRun.status);
+
   return (
     <div className="rounded-md border bg-background p-3 text-sm">
       <div className="flex items-start justify-between gap-3">
@@ -75,51 +77,22 @@ function AgentRunCard({
             {agentRun.branchName}
           </p>
         </div>
-        <AgentRunStatusActions
-          agentRunId={agentRun.id}
-          title={agentRun.notionTitle}
-          status={agentRun.status}
-          checkoutPending={checkoutPending}
-          branchCheckedOut={branchCheckedOut}
-          onCheckout={onCheckout}
-        />
+        <div className="flex shrink-0 items-start gap-2 text-xs text-muted-foreground">
+          <div className="flex h-7 items-center gap-2">
+            {isRunning && <LoaderCircle className="size-4 animate-spin" />}
+          </div>
+          {!isRunning && (
+            <AgentRunActions
+              agentRunId={agentRun.id}
+              title={agentRun.notionTitle}
+              canContinue={agentRun.status === "COMPLETED"}
+              branchCheckedOut={branchCheckedOut}
+              checkoutPending={checkoutPending}
+              onCheckout={onCheckout}
+            />
+          )}
+        </div>
       </div>
-    </div>
-  );
-}
-
-function AgentRunStatusActions({
-  agentRunId,
-  title,
-  status,
-  checkoutPending,
-  branchCheckedOut,
-  onCheckout,
-}: {
-  agentRunId: string;
-  title: string;
-  status: AgentRun["status"];
-  checkoutPending: boolean;
-  branchCheckedOut: boolean;
-  onCheckout: () => void;
-}) {
-  const isRunning = RUNNING_STATUSES.has(status);
-
-  return (
-    <div className="flex shrink-0 items-start gap-2 text-xs text-muted-foreground">
-      <div className="flex h-7 items-center gap-2">
-        {isRunning && <LoaderCircle className="size-4 animate-spin" />}
-      </div>
-      {!isRunning && (
-        <AgentRunActions
-          agentRunId={agentRunId}
-          title={title}
-          canContinue={status === "COMPLETED"}
-          branchCheckedOut={branchCheckedOut}
-          checkoutPending={checkoutPending}
-          onCheckout={onCheckout}
-        />
-      )}
     </div>
   );
 }

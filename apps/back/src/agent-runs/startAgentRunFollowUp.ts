@@ -1,10 +1,10 @@
 import { CONFIG } from "../config";
-import { AgentRunStatus } from "../generated/prisma/enums";
 import { prisma } from "../lib/prisma";
-import { type AgentImage, spawnPiAgent } from "../pi/spawnPiAgent";
+import { type AgentImage, startPiAgent } from "../pi/startPiAgent";
 import { getDefaultBaseBranch } from "../settings/settings.service";
 import { createTaskWorktree } from "../utils/git/createTaskWorktree";
 import { getBranches } from "../utils/git/getBranches";
+import { isAgentRunActive } from "./agent-run-status";
 
 export async function startAgentRunFollowUp(
   agentRunId: string,
@@ -19,10 +19,7 @@ export async function startAgentRunFollowUp(
     throw new Error("Agent run not found.");
   }
 
-  if (
-    agentRun.status === AgentRunStatus.PENDING ||
-    agentRun.status === AgentRunStatus.RUNNING
-  ) {
+  if (isAgentRunActive(agentRun.status)) {
     throw new Error("The agent is already working on this ticket.");
   }
 
@@ -47,18 +44,19 @@ export async function startAgentRunFollowUp(
     baseBranch: await getDefaultBaseBranch(),
   });
 
-  void spawnPiAgent({
-    title: agentRun.notionTitle,
-    description: instruction,
-    cwd: worktree.worktreePath,
-    agentRunId: agentRun.id,
-    worktreePath: worktree.worktreePath,
-    notionPageId: agentRun.notionPageId,
-    sessionFile: agentRun.piSessionFile,
-    images,
-  }).catch((error) => {
-    console.error("Pi agent follow-up failed:", error);
-  });
+  startPiAgent(
+    {
+      title: agentRun.notionTitle,
+      description: instruction,
+      cwd: worktree.worktreePath,
+      agentRunId: agentRun.id,
+      worktreePath: worktree.worktreePath,
+      notionPageId: agentRun.notionPageId,
+      sessionFile: agentRun.piSessionFile,
+      images,
+    },
+    "Pi agent follow-up",
+  );
 
   return { status: "accepted" as const };
 }
