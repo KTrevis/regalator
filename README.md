@@ -1,75 +1,48 @@
 # Remote Kanban
 
-A Bun/Turbo monorepo designed as a long-term foundation:
+Remote Kanban switches a managed project between Git branches without assuming a package manager, runtime, database engine, or migration tool.
 
-- `apps/front`: React, Vite, Tailwind CSS, TanStack Router, TanStack Query, and the Eden client.
-- `apps/back`: Elysia API.
-- `packages/shared`: shared schemas, types, and domain utilities.
-- `packages/typescript-config`: shared strict TypeScript configurations.
+## Supervisor configuration
 
-## Safe API types
-
-The back end only exports `@remote-kanban/back/type`, which points to the API declarations and an empty runtime module. The client in `apps/front/src/lib/eden.ts` only imports `type { App }` for Eden, so the front-end bundle does not contain server code.
-
-## Development with Caddy
-
-Requirements: Bun and Docker.
-
-```sh
-bun install
-bun run dev
-```
-
-This starts Caddy in Docker and then runs the applications with Turbo:
-
-- Remote Kanban through Caddy: <http://embed.localhost>
-- Host site integration sandbox: <http://host.localhost>
-- Direct Vite front end: <http://localhost:5173>
-- Direct Elysia API: <http://localhost:3000>
-
-Caddy routes `/api/*` to Elysia and all other requests to Vite. The Eden client uses the current origin by default, so no environment variable is required when using Caddy.
-
-The host site loads the minimal integration script:
-
-```html
-<script async src="http://embed.localhost/embed.js"></script>
-```
-
-The script creates a badge-sized iframe and expands it to fill the viewport while the drawer is open.
-
-Stop Caddy with:
-
-```sh
-bun run dev:down
-```
-
-Run the applications without Caddy with:
-
-```sh
-bun run dev:apps
-```
-
-If port 80 is already in use, copy `.env.example` to `.env` and select another port:
+Copy `.env.example` to `.env` and configure the managed project:
 
 ```env
-CADDY_HTTP_PORT=8080
+REMOTE_KANBAN_PROJECT_PATH=/absolute/path/to/project
+REMOTE_KANBAN_CHECKOUT_HOOK=scripts/remote-kanban-checkout.sh
+REMOTE_KANBAN_START_SCRIPT=scripts/remote-kanban-start.sh
+REMOTE_KANBAN_BACKEND_URL=http://127.0.0.1:8080
 ```
 
-The application will then be available at `http://embed.localhost:8080`.
+Hook and start script paths are relative to `REMOTE_KANBAN_PROJECT_PATH`. The backend URL is optional and must target the managed backend directly. Any HTTP response means it is ready.
 
-## Front-end API configuration
+## Checkout hook
 
-To call an API on another origin, create `apps/front/.env.local`:
+The checkout hook runs after the initial checkout and every branch switch. Remote Kanban provides a stable branch identifier through `REMOTE_KANBAN_BRANCH_ID`.
 
-```env
-VITE_API_URL=http://localhost:3000
-```
+The hook owns finite project preparation tasks such as dependency installation, branch database provisioning, environment updates, and migrations. A successful exit code allows the managed project to start; a failure leaves it stopped.
 
-`VITE_*` variables are public and embedded at build time. Never store secrets in them.
-
-## Verification
+Example hook:
 
 ```sh
-bun run check-types
-bun run build
+#!/bin/sh
+set -eu
+
+pnpm install --frozen-lockfile
+./scripts/prepare-branch-database "$REMOTE_KANBAN_BRANCH_ID"
+pnpm db:migrate:deploy
 ```
+
+## Start script
+
+The start script is the long-running managed project process. It should use `exec` so the supervisor can stop it cleanly.
+
+```sh
+#!/bin/sh
+set -eu
+
+exec pnpm dev
+```
+
+Remote Kanban itself remains running during branch switches. The supervisor only stops and restarts the managed project.
+
+Both scripts are versioned by the managed project. Changes to them execute arbitrary code and must therefore require deployment permissions.

@@ -113,7 +113,7 @@
 }
 
 .remote-kanban-app > button {
-  @apply fixed bottom-2 right-2;
+  @apply fixed inset-0;
 }
 
 .dark {

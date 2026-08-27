@@ -13,36 +13,36 @@ export const getBranches = async (
   repositoryPath: string,
   remoteName = "origin",
 ): Promise<GitBranch[]> => {
-  const [currentBranch, localBranches, remoteBranches, worktreeBranches] = await Promise.all([
-    git.currentBranch({
-      fs,
-      dir: repositoryPath,
-      fullname: false,
-    }),
-    git.listBranches({
-      fs,
-      dir: repositoryPath,
-    }),
-    git.listBranches({
-      fs,
-      dir: repositoryPath,
-      remote: remoteName,
-    }),
-    listWorktreeBranches(repositoryPath),
-  ]);
+  const [currentBranch, localBranches, remoteBranches, worktreeBranches] =
+    await Promise.all([
+      git.currentBranch({
+        fs,
+        dir: repositoryPath,
+        fullname: false,
+      }),
+      git.listBranches({
+        fs,
+        dir: repositoryPath,
+      }),
+      git.listBranches({
+        fs,
+        dir: repositoryPath,
+        remote: remoteName,
+      }),
+      listWorktreeBranches(repositoryPath),
+    ]);
 
-  const localBranchNames = new Set(localBranches);
   const remoteBranchNames = new Set(
     remoteBranches.filter((branchName) => branchName !== "HEAD"),
   );
 
-  return Array.from(
-    new Set([...localBranchNames, ...remoteBranchNames].filter((name) => !worktreeBranches.has(name))),
-    (name): GitBranch => ({
+  return localBranches
+    .filter((name) => !worktreeBranches.has(name))
+    .map((name): GitBranch => ({
       name,
       current: name === currentBranch,
-      local: localBranchNames.has(name),
+      local: true,
       remote: remoteBranchNames.has(name),
-    }),
-  ).sort((left, right) => left.name.localeCompare(right.name));
+    }))
+    .sort((left, right) => left.name.localeCompare(right.name));
 };

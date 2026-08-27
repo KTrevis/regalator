@@ -29,5 +29,7 @@ yarn-error.log*
 
 # Misc
 .DS_Store
+.env
 *.pem
 notion-token.txt
+.remote-kanban/

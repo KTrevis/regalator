@@ -1,4 +1,5 @@
-const NOTION_TOKEN_PATH = new URL("./notion-token.txt", import.meta.url).pathname;
+const NOTION_TOKEN_PATH = new URL("./notion-token.txt", import.meta.url)
+  .pathname;
 
 const NOTION_OAUTH_URL = "https://api.notion.com/v1/oauth/authorize";
 const NOTION_TOKEN_URL = "https://api.notion.com/v1/oauth/token";
@@ -74,10 +75,7 @@ export function getNotionAuthorizationUrl() {
 }
 
 export function getNotionRedirectUri() {
-  return (
-    Bun.env["NOTION_REDIRECT_URI"]?.trim() ||
-    `${getBackPublicUrl()}/api/notion/oauth/callback`
-  );
+  return `${getBackPublicUrl()}/api/notion/oauth/callback`;
 }
 
 export function getNotionTokenPath() {
@@ -92,17 +90,25 @@ export function logNotionSetupInstructions() {
   ].filter((variable): variable is string => Boolean(variable));
 
   console.log("\nNotion API key generation setup:");
-  console.log("1. Create a Notion OAuth integration: https://www.notion.so/my-integrations");
+  console.log(
+    "1. Create a Notion OAuth integration: https://www.notion.so/my-integrations",
+  );
   console.log(`2. Register this redirect URI: ${getNotionRedirectUri()}`);
-  console.log("3. Add NOTION_CLIENT_ID and NOTION_CLIENT_SECRET to apps/back/.env");
-  console.log(`4. The generated token will be saved to: ${getNotionTokenPath()}`);
+  console.log(
+    "3. Add NOTION_CLIENT_ID and NOTION_CLIENT_SECRET to apps/back/.env",
+  );
+  console.log(
+    `4. The generated token will be saved to: ${getNotionTokenPath()}`,
+  );
 
   if (missingVariables.length > 0) {
     console.log(`Missing Notion env variables: ${missingVariables.join(", ")}`);
     return;
   }
 
-  console.log(`Open this URL to generate a Notion API key: ${authorizationUrl}`);
+  console.log(
+    `Open this URL to generate a Notion API key: ${authorizationUrl}`,
+  );
 }
 
 function getNotionClientId() {

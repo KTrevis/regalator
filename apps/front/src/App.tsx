@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { ArrowLeftIcon, GitBranchIcon, SettingsIcon } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowLeftIcon, SettingsIcon } from "lucide-react";
 import { AgentRunList } from "./components/AgentRunList";
+import { DraggableLauncher } from "./components/DraggableLauncher";
 import { GitBranchList } from "./components/GitBranchList";
 import { SettingsView } from "./components/SettingsView";
 import { Button } from "./components/ui/button";
@@ -9,9 +10,11 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "./components/ui/sheet";
-import { notifyDrawerState } from "./lib/embed-frame";
+import {
+  notifyDrawerState,
+  subscribeToHostDrawerClose,
+} from "./lib/embed-frame";
 
 export const App = () => {
   const [open, setOpen] = useState(false);
@@ -23,21 +26,13 @@ export const App = () => {
     if (!nextOpen) setView("runs");
   };
 
+  useEffect(() => subscribeToHostDrawerClose(() => setDrawerOpen(false)), []);
+
   return (
     <main className="remote-kanban-app">
       <Sheet open={open} onOpenChange={setDrawerOpen}>
-        <SheetTrigger
-          render={
-            <Button
-              size="icon"
-              aria-label="Open Remote Kanban"
-              title="Remote Kanban"
-            />
-          }
-        >
-          <GitBranchIcon className="size-5" />
-        </SheetTrigger>
-        <SheetContent>
+        <DraggableLauncher onOpen={() => setDrawerOpen(true)} />
+        <SheetContent className="!w-full !max-w-none">
           {view === "runs" ? (
             <RunsView onOpenSettings={() => setView("settings")} />
           ) : (

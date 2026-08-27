@@ -1,0 +1,7 @@
+{
+  "extends": "./packages/typescript-config/bun.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": ["scripts/**/*.ts"]
+}

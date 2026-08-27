@@ -1,12 +1,12 @@
 import { SWITCH_BRANCH_SCHEMA } from "@remote-kanban/shared";
 import { Elysia } from "elysia";
 import { CONFIG } from "../config";
-import { refreshBranches } from "../utils/git/refreshBranches";
+import { getBranches } from "../utils/git/getBranches";
 import { switchBranch } from "../utils/git/switchBranch";
 
 export const GIT_ROUTES = new Elysia({ prefix: "/git" })
   .get("/branches", async () => ({
-    branches: await refreshBranches(CONFIG.repoPath),
+    branches: await getBranches(CONFIG.repoPath),
   }))
   .post(
     "/branch/switch",
