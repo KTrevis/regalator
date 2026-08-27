@@ -20,7 +20,7 @@ export class NotionOAuthError extends Error {
   }
 }
 
-export async function fetchNotionAccessToken(code: string) {
+export async function storeNotionAccessToken(code: string) {
   const clientId = getNotionClientId();
   const clientSecret = getNotionClientSecret();
   const redirectUri = getNotionRedirectUri();
@@ -54,11 +54,9 @@ export async function fetchNotionAccessToken(code: string) {
   }
 
   await Bun.write(NOTION_TOKEN_PATH, data.access_token);
-
-  return data.access_token;
 }
 
-export function getNotionAuthorizationUrl() {
+function getNotionAuthorizationUrl() {
   const clientId = getNotionClientId();
 
   if (!clientId) {
@@ -74,7 +72,7 @@ export function getNotionAuthorizationUrl() {
   return url.toString();
 }
 
-export function getNotionRedirectUri() {
+function getNotionRedirectUri() {
   return `${getBackPublicUrl()}/api/notion/oauth/callback`;
 }
 

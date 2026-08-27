@@ -6,21 +6,16 @@ import { getDefaultBaseBranch } from "../settings/settings.service";
 import { createTaskWorktree } from "../utils/git/createTaskWorktree";
 import { getPageDescription } from "./notion.page-description";
 import { getPageTitle } from "./notion.title";
-import type { NotionAutomationPageWebhookBody } from "./notion.webhook.types";
 
-export async function startNotionAgentRun(
-  webhookBody: NotionAutomationPageWebhookBody,
-) {
+type NotionPageWebhook = {
+  data: {
+    id: string;
+    url: string;
+  };
+};
+
+export async function startNotionAgentRun(webhookBody: NotionPageWebhook) {
   const pageId = webhookBody.data.id;
-  const title = (await getPageTitle(pageId)) ?? pageId;
-  const description = (await getPageDescription(pageId)) ?? "";
-  const worktree = await createTaskWorktree({
-    repositoryPath: CONFIG.repoPath,
-    worktreesPath: CONFIG.worktreesPath,
-    taskId: pageId,
-    title,
-    baseBranch: await getDefaultBaseBranch(),
-  });
   const runningAgentRun = await getRunningAgentRun(pageId);
 
   if (runningAgentRun) {
@@ -30,6 +25,20 @@ export async function startNotionAgentRun(
       worktreePath: runningAgentRun.worktreePath,
     };
   }
+
+  const [pageTitle, description, baseBranch] = await Promise.all([
+    getPageTitle(pageId),
+    getPageDescription(pageId),
+    getDefaultBaseBranch(),
+  ]);
+  const title = pageTitle || pageId;
+  const worktree = await createTaskWorktree({
+    repositoryPath: CONFIG.repoPath,
+    worktreesPath: CONFIG.worktreesPath,
+    taskId: pageId,
+    title,
+    baseBranch,
+  });
 
   const agentRun = await upsertPendingAgentRun({
     notionPageId: pageId,

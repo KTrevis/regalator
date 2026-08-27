@@ -38,7 +38,6 @@
         "@base-ui/react": "^1.7.0",
         "@elysiajs/eden": "^1.4.5",
         "@fontsource-variable/geist": "^5.3.0",
-        "@regalator/shared": "workspace:*",
         "@tanstack/react-query": "^5.90.16",
         "@tanstack/react-router": "^1.170.32",
         "@use-gesture/react": "^10.3.1",

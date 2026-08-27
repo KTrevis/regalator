@@ -1,4 +1,4 @@
-export type EmbedFrameMessage =
+type EmbedFrameMessage =
   | {
       readonly source: "regalator";
       readonly type: "drawer:open" | "drawer:close";

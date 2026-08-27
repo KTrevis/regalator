@@ -19,10 +19,11 @@ export function getManagedProjectScriptPath(
 export async function assertManagedProjectScriptsExist(repositoryPath: string) {
   const missingScripts: string[] = [];
 
-  for (const script of Object.keys(
-    SCRIPT_ENV_NAMES,
-  ) as ManagedProjectScript[]) {
-    const scriptPath = getManagedProjectScriptPath(repositoryPath, script);
+  for (const envName of Object.values(SCRIPT_ENV_NAMES)) {
+    const configuredPath = Bun.env[envName];
+    if (!configuredPath) continue;
+
+    const scriptPath = resolve(repositoryPath, configuredPath);
     if (scriptPath && !(await isFile(scriptPath)))
       missingScripts.push(scriptPath);
   }

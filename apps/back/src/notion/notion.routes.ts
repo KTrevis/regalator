@@ -1,10 +1,9 @@
-import Elysia from "elysia";
+import Elysia, { t } from "elysia";
 import {
-  fetchNotionAccessToken,
   getNotionTokenPath,
   NotionOAuthError,
+  storeNotionAccessToken,
 } from "./notion.oauth";
-import type { NotionAutomationPageWebhookBody } from "./notion.webhook.types";
 import { startNotionAgentRun } from "./startNotionAgentRun";
 
 export const NOTION_ROUTES = new Elysia({ prefix: "/notion" })
@@ -17,10 +16,9 @@ export const NOTION_ROUTES = new Elysia({ prefix: "/notion" })
     }
 
     try {
-      const accessToken = await fetchNotionAccessToken(code);
+      await storeNotionAccessToken(code);
 
       return {
-        accessToken,
         tokenPath: getNotionTokenPath(),
       };
     } catch (error) {
@@ -34,8 +32,19 @@ export const NOTION_ROUTES = new Elysia({ prefix: "/notion" })
       };
     }
   })
-  .post("/webhook", async ({ body, set }) => {
-    set.status = 202;
+  .post(
+    "/webhook",
+    async ({ body, set }) => {
+      set.status = 202;
 
-    return startNotionAgentRun(body as NotionAutomationPageWebhookBody);
-  });
+      return startNotionAgentRun(body);
+    },
+    {
+      body: t.Object({
+        data: t.Object({
+          id: t.String({ minLength: 1 }),
+          url: t.String({ minLength: 1 }),
+        }),
+      }),
+    },
+  );

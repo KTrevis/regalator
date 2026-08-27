@@ -10,19 +10,14 @@ export async function getNotionClient() {
 
   const tokenPath = getNotionTokenPath();
   const tokenFile = Bun.file(tokenPath);
-
-  if (!(await tokenFile.exists())) {
-    const err = `Notion token file not found at ${tokenPath}. Generate it from the Notion OAuth setup URL logged by the back end.`;
-    console.error(err);
-    throw new Error(err);
-  }
-
-  const token = (await tokenFile.text()).trim();
+  const token = (await tokenFile.exists())
+    ? (await tokenFile.text()).trim()
+    : "";
 
   if (!token) {
-    const err = `Notion token file not found at ${tokenPath}. Generate it from the Notion OAuth setup URL logged by the back end.`;
-    console.error(err);
-    throw new Error(err);
+    throw new Error(
+      `Notion token file not found at ${tokenPath}. Generate it from the Notion OAuth setup URL logged by the back end.`,
+    );
   }
 
   cachedNotionClient = new Client({ auth: token });

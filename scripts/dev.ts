@@ -1,12 +1,12 @@
 import { $ } from "bun";
 
-const remoteKanbanPath = new URL("..", import.meta.url).pathname;
+const projectPath = new URL("..", import.meta.url).pathname;
 
 await $`docker compose -f compose.dev.yml up -d --force-recreate caddy`.cwd(
-  remoteKanbanPath,
+  projectPath,
 );
-const remoteKanbanApps = Bun.spawn(["bun", "run", "dev:apps"], {
-  cwd: remoteKanbanPath,
+const apps = Bun.spawn(["bun", "run", "dev:apps"], {
+  cwd: projectPath,
   stdin: "inherit",
   stdout: "inherit",
   stderr: "inherit",
@@ -17,8 +17,8 @@ for (const signal of ["SIGINT", "SIGTERM"] as const) {
 }
 
 async function shutdown(signal: "SIGINT" | "SIGTERM") {
-  remoteKanbanApps.kill(signal);
-  await remoteKanbanApps.exited;
+  apps.kill(signal);
+  await apps.exited;
 
   process.exit(0);
 }

@@ -6,12 +6,10 @@ export async function getPageTitle(pageId: string) {
   if (!("properties" in res)) {
     return "";
   }
-  const properties = res.properties;
-  for (const [key, _] of Object.entries(properties)) {
-    const property = properties[key];
-    if (property && property.type == "title") {
-      return property.title.map((curr) => curr.plain_text).join("");
-    }
-  }
-  return "";
+
+  const title = Object.values(res.properties).find(
+    (property) => property.type === "title",
+  );
+
+  return title?.title.map(({ plain_text }) => plain_text).join("") ?? "";
 }

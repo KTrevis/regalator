@@ -1,25 +1,7 @@
-import { useState } from "react";
-import {
-  EllipsisVerticalIcon,
-  GitBranchIcon,
-  LoaderCircle,
-  MessageCircleIcon,
-  Trash2Icon,
-} from "lucide-react";
-import {
-  useDeleteAgentRun,
-  useGetAgentRuns,
-} from "../queries/agent-runs.query";
+import { LoaderCircle } from "lucide-react";
+import { useGetAgentRuns } from "../queries/agent-runs.query";
 import { useGetBranches, useSwitchBranch } from "../queries/git.query";
-import { AgentInstructionsSheet } from "./AgentInstructionsSheet";
-import { Button } from "./ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { AgentRunActions } from "./AgentRunActions";
 
 const RUNNING_STATUSES = new Set(["PENDING", "RUNNING"]);
 
@@ -97,7 +79,6 @@ function AgentRunCard({
           agentRunId={agentRun.id}
           title={agentRun.notionTitle}
           status={agentRun.status}
-          branchName={agentRun.branchName}
           checkoutPending={checkoutPending}
           branchCheckedOut={branchCheckedOut}
           onCheckout={onCheckout}
@@ -111,7 +92,6 @@ function AgentRunStatusActions({
   agentRunId,
   title,
   status,
-  branchName,
   checkoutPending,
   branchCheckedOut,
   onCheckout,
@@ -119,93 +99,26 @@ function AgentRunStatusActions({
   agentRunId: string;
   title: string;
   status: AgentRun["status"];
-  branchName: string;
   checkoutPending: boolean;
   branchCheckedOut: boolean;
   onCheckout: () => void;
 }) {
-  const [instructionsOpen, setInstructionsOpen] = useState(false);
-  const deleteAgentRun = useDeleteAgentRun(agentRunId);
-  const canDelete = !RUNNING_STATUSES.has(status);
-
-  const handleDelete = () => {
-    if (
-      window.confirm(
-        `Delete the agent run for "${title}"? This action cannot be undone.`,
-      )
-    ) {
-      deleteAgentRun.mutate();
-    }
-  };
+  const isRunning = RUNNING_STATUSES.has(status);
 
   return (
     <div className="flex shrink-0 items-start gap-2 text-xs text-muted-foreground">
       <div className="flex h-7 items-center gap-2">
-        {RUNNING_STATUSES.has(status) && (
-          <LoaderCircle className="size-4 animate-spin" />
-        )}
+        {isRunning && <LoaderCircle className="size-4 animate-spin" />}
       </div>
-      {canDelete && (
-        <div className="flex flex-col gap-1">
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <Button
-                  variant="outline"
-                  size="icon-xs"
-                  aria-label="Open run actions"
-                  title="More actions"
-                />
-              }
-            >
-              <EllipsisVerticalIcon className="size-3" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-auto">
-              {status === "COMPLETED" && (
-                <>
-                  <Tooltip>
-                    <TooltipTrigger render={<div />}>
-                      <DropdownMenuItem
-                        disabled={branchCheckedOut}
-                        onClick={() => setInstructionsOpen(true)}
-                      >
-                        <MessageCircleIcon />
-                        Give new instructions
-                      </DropdownMenuItem>
-                    </TooltipTrigger>
-                    {branchCheckedOut && (
-                      <TooltipContent side="left">
-                        This branch is currently checked out. Switch to another
-                        branch before giving new instructions.
-                      </TooltipContent>
-                    )}
-                  </Tooltip>
-                  <DropdownMenuItem
-                    disabled={checkoutPending}
-                    onClick={onCheckout}
-                  >
-                    <GitBranchIcon />
-                    Switch to branch
-                  </DropdownMenuItem>
-                </>
-              )}
-              <DropdownMenuItem
-                variant="destructive"
-                disabled={deleteAgentRun.isPending}
-                onClick={handleDelete}
-              >
-                <Trash2Icon />
-                Delete run
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <AgentInstructionsSheet
-            agentRunId={agentRunId}
-            title={title}
-            open={instructionsOpen}
-            onOpenChange={setInstructionsOpen}
-          />
-        </div>
+      {!isRunning && (
+        <AgentRunActions
+          agentRunId={agentRunId}
+          title={title}
+          canContinue={status === "COMPLETED"}
+          branchCheckedOut={branchCheckedOut}
+          checkoutPending={checkoutPending}
+          onCheckout={onCheckout}
+        />
       )}
     </div>
   );

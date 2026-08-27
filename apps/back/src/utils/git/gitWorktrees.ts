@@ -1,19 +1,16 @@
 import { resolve } from "node:path";
 import { $ } from "bun";
 
-export type GitWorktree = {
+type GitWorktree = {
   path: string;
   branch?: string;
 };
 
-export async function listWorktrees(repositoryPath: string) {
-  const output = await $`git -C ${repositoryPath} worktree list --porcelain`.text();
+async function listWorktrees(repositoryPath: string) {
+  const output =
+    await $`git -C ${repositoryPath} worktree list --porcelain`.text();
 
-  return output
-    .trim()
-    .split("\n\n")
-    .filter(Boolean)
-    .map(parseWorktree);
+  return output.trim().split("\n\n").filter(Boolean).map(parseWorktree);
 }
 
 export async function listWorktreeBranches(repositoryPath: string) {
@@ -39,7 +36,10 @@ export async function assertBranchIsNotCheckedOutInAnotherWorktree(
   }
 }
 
-export async function removeWorktree(repositoryPath: string, worktreePath: string) {
+export async function removeWorktree(
+  repositoryPath: string,
+  worktreePath: string,
+) {
   await $`git -C ${repositoryPath} worktree remove ${worktreePath}`.quiet();
 }
 
