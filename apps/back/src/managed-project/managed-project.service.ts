@@ -1,5 +1,6 @@
 import { CONFIG } from "../config";
 import { getCurrentRef } from "../utils/git/getCurrentRef";
+import { pullBranch } from "../utils/git/pullBranch";
 import { switchBranch } from "../utils/git/switchBranch";
 import { runCheckoutHook } from "./checkout-hook";
 import {
@@ -33,6 +34,22 @@ export async function switchManagedProjectBranch(branch: string) {
     } catch (error) {
       await restoreManagedProject(previousRef, branch, error);
     }
+  });
+}
+
+export function pullManagedProjectBranch() {
+  return runLifecycleOperation(async () => {
+    const branch = await getCurrentRef(CONFIG.repoPath);
+    await stopManagedProject();
+
+    try {
+      await pullBranch(CONFIG.repoPath);
+    } catch (error) {
+      await restartAfterFailedPull(branch, error);
+    }
+
+    await prepareAndStartProject();
+    return branch;
   });
 }
 
@@ -76,7 +93,25 @@ async function restoreManagedProject(
   );
 }
 
-async function runLifecycleOperation(operation: () => Promise<void>) {
+async function restartAfterFailedPull(
+  branch: string,
+  pullError: unknown,
+): Promise<never> {
+  try {
+    await prepareAndStartProject();
+  } catch (restartError) {
+    throw new AggregateError(
+      [pullError, restartError],
+      `Failed to pull ${branch} and to restart it.`,
+    );
+  }
+
+  throw new Error(`Failed to pull ${branch}; restarted ${branch}.`, {
+    cause: pullError,
+  });
+}
+
+async function runLifecycleOperation<Result>(operation: () => Promise<Result>) {
   if (lifecycleRunning) {
     throw new Error(
       "A managed project lifecycle operation is already running.",
@@ -85,7 +120,7 @@ async function runLifecycleOperation(operation: () => Promise<void>) {
 
   lifecycleRunning = true;
   try {
-    await operation();
+    return await operation();
   } finally {
     lifecycleRunning = false;
   }

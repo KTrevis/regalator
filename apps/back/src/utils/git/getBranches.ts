@@ -36,12 +36,15 @@ export const getBranches = async (
     remoteBranches.filter((branchName) => branchName !== "HEAD"),
   );
 
-  return localBranches
+  const localBranchNames = new Set(localBranches);
+  const branchNames = new Set([...localBranches, ...remoteBranchNames]);
+
+  return [...branchNames]
     .filter((name) => !worktreeBranches.has(name))
     .map((name): GitBranch => ({
       name,
       current: name === currentBranch,
-      local: true,
+      local: localBranchNames.has(name),
       remote: remoteBranchNames.has(name),
     }))
     .sort((left, right) => left.name.localeCompare(right.name));

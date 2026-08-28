@@ -5,12 +5,12 @@ Regalator does not assume a package manager, runtime, database engine, or migrat
 ## Prerequisites
 
 - [Bun](https://bun.sh/) 1.3.5 or later;
-- a Git repository with the branches that Regalator should manage available locally;
+- a Git repository with the branches that Regalator should manage available locally or on the `origin` remote;
 - a web project that can be started by a long-running shell script;
 - a backend endpoint that Regalator can use as a readiness check;
 - a public Regalator URL reachable by the managed website and, for the Notion integration, by Notion.
 
-The managed repository should have a clean working tree before Regalator switches branches. Branches already checked out in another Git worktree are not available in the branch picker.
+The managed repository should have a clean working tree before Regalator switches or pulls branches. Branches already checked out in another Git worktree are not available in the branch picker.
 
 ## Install Regalator
 
@@ -200,7 +200,7 @@ Notion agent runs create a branch named `feature/notion-...` in a separate workt
 
 `REGALATOR_WORKTREES_PATH` controls where these temporary worktrees are created. Keep that directory outside the managed repository.
 
-## Branch switch lifecycle
+## Branch lifecycle
 
 When a branch is selected in the embedded interface, Regalator:
 
@@ -213,3 +213,5 @@ When a branch is selected in the embedded interface, Regalator:
 7. completes the UI request when the project is ready.
 
 If preparation or startup fails, Regalator restores the previous branch and runs its hook, startup script, and readiness check again.
+
+The pull button fetches and fast-forwards the current branch from `origin`. Regalator stops the project before pulling, then runs the checkout hook and starts the project again. If the pull fails, the unchanged project is restarted.

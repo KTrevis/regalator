@@ -2,6 +2,7 @@ import { expect, mock, test } from "bun:test";
 
 const events: string[] = [];
 let currentRef = "main";
+let pullFails = false;
 
 mock.module("../src/config", () => ({
   CONFIG: { repoPath: "/repository" },
@@ -18,6 +19,14 @@ mock.module("../src/utils/git/switchBranch", () => ({
   switchBranch: async (_repositoryPath: string, ref: string) => {
     events.push(`checkout:${ref}`);
     currentRef = ref;
+  },
+}));
+
+mock.module("../src/utils/git/pullBranch", () => ({
+  pullBranch: async () => {
+    events.push(`pull:${currentRef}`);
+    if (pullFails) throw new Error("Pull failed.");
+    return currentRef;
   },
 }));
 
@@ -57,8 +66,12 @@ mock.module("../src/managed-project/managed-process", () => ({
   waitForManagedProjectReady: async () => events.push(`ready:${currentRef}`),
 }));
 
-const { startManagedProject, stopManagedProject, switchManagedProjectBranch } =
-  await import("../src/managed-project/managed-project.service");
+const {
+  pullManagedProjectBranch,
+  startManagedProject,
+  stopManagedProject,
+  switchManagedProjectBranch,
+} = await import("../src/managed-project/managed-project.service");
 
 test("rejects a branch with missing managed project scripts before switching", async () => {
   await startManagedProject();
@@ -69,6 +82,45 @@ test("rejects a branch with missing managed project scripts before switching", a
   );
 
   expect(events).toEqual(["check-branch-scripts:legacy"]);
+});
+
+test("pulls the current branch and restarts the project", async () => {
+  events.length = 0;
+
+  await expect(pullManagedProjectBranch()).resolves.toBe("main");
+
+  expect(events).toEqual([
+    "get-ref:main",
+    "stop:main:SIGTERM",
+    "pull:main",
+    "check-scripts:main",
+    "hook:main",
+    "start:main",
+    "ready:main",
+  ]);
+});
+
+test("restarts the project when pulling fails", async () => {
+  events.length = 0;
+  pullFails = true;
+
+  try {
+    await expect(pullManagedProjectBranch()).rejects.toThrow(
+      "Failed to pull main; restarted main.",
+    );
+  } finally {
+    pullFails = false;
+  }
+
+  expect(events).toEqual([
+    "get-ref:main",
+    "stop:main:SIGTERM",
+    "pull:main",
+    "check-scripts:main",
+    "hook:main",
+    "start:main",
+    "ready:main",
+  ]);
 });
 
 test("restores and keeps the previous branch running after preparation fails", async () => {
