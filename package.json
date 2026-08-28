@@ -3,10 +3,7 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
-    "dev": "bun scripts/dev.ts",
-    "dev:apps": "turbo run dev",
-    "dev:proxy": "docker compose -f compose.dev.yml up -d caddy",
-    "dev:down": "docker compose -f compose.dev.yml down",
+    "dev": "turbo run dev",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types"
