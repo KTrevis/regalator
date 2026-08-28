@@ -36,7 +36,7 @@ REGALATOR_BACKEND_URL=https://regalator.example.com
 REGALATOR_PROJECT_PATH=/absolute/path/to/project
 REGALATOR_CHECKOUT_HOOK=/absolute/path/to/project/scripts/regalator/checkout-hook.sh
 REGALATOR_START_SCRIPT=/absolute/path/to/project/scripts/regalator/startup.sh
-REGALATOR_PROJECT_BACKEND_URL=http://127.0.0.1:8080
+REGALATOR_PROJECT_HEALTHCHECK_URL=http://127.0.0.1:8080
 
 # Optional. Defaults to <REGALATOR_PROJECT_PATH>-worktrees.
 REGALATOR_WORKTREES_PATH=/absolute/path/to/project-worktrees
@@ -88,7 +88,7 @@ Do not daemonize the project or leave child processes running after the script e
 
 ### Readiness check
 
-After the startup script runs, Regalator waits for `REGALATOR_PROJECT_BACKEND_URL` to send a valid HTTP response before completing the branch switch request, which tells the Regalator frontend that the new branch is ready.
+After the startup script runs, Regalator waits for `REGALATOR_PROJECT_HEALTHCHECK_URL` to send a valid HTTP response before completing the branch switch request, which tells the Regalator frontend that the new branch is ready.
 
 The current readiness check:
 
@@ -209,7 +209,7 @@ When a branch is selected in the embedded interface, Regalator:
 3. checks out the selected branch;
 4. runs the checkout hook;
 5. starts the managed project;
-6. waits for `REGALATOR_PROJECT_BACKEND_URL`;
+6. waits for `REGALATOR_PROJECT_HEALTHCHECK_URL`;
 7. completes the UI request when the project is ready.
 
 If preparation or startup fails, Regalator restores the previous branch and runs its hook, startup script, and readiness check again.

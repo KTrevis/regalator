@@ -32,9 +32,9 @@ export async function stopManagedProjectProcess(
 export async function waitForManagedProjectReady(
   process: ManagedProjectProcess | undefined,
 ) {
-  const projectBackendUrl = environment.projectBackendUrl;
+  const projectHealthcheckUrl = environment.projectHealthcheckUrl;
 
-  if (!projectBackendUrl) {
+  if (!projectHealthcheckUrl) {
     await Bun.sleep(100);
     assertProcessRunning(process);
     return;
@@ -44,7 +44,7 @@ export async function waitForManagedProjectReady(
   while (Date.now() < deadline) {
     assertProcessRunning(process);
 
-    const reachable = await fetch(projectBackendUrl, {
+    const reachable = await fetch(projectHealthcheckUrl, {
       signal: AbortSignal.timeout(1_000),
     }).then(
       () => true,

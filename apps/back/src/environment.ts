@@ -6,7 +6,7 @@ type EnvironmentVariableName =
   | "PORT"
   | "REGALATOR_BACKEND_URL"
   | "REGALATOR_CHECKOUT_HOOK"
-  | "REGALATOR_PROJECT_BACKEND_URL"
+  | "REGALATOR_PROJECT_HEALTHCHECK_URL"
   | "REGALATOR_PROJECT_PATH"
   | "REGALATOR_START_SCRIPT"
   | "REGALATOR_WORKTREES_PATH";
@@ -59,8 +59,8 @@ export const environment = {
   get port() {
     return getPort();
   },
-  get projectBackendUrl() {
-    return readEnvironmentVariable("REGALATOR_PROJECT_BACKEND_URL");
+  get projectHealthcheckUrl() {
+    return readEnvironmentVariable("REGALATOR_PROJECT_HEALTHCHECK_URL");
   },
   get projectCheckoutHook() {
     return readEnvironmentVariable("REGALATOR_CHECKOUT_HOOK");
