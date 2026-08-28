@@ -1,11 +1,12 @@
 import { app } from "./app";
+import { environment } from "./environment";
 import {
   startManagedProject,
   stopManagedProject,
 } from "./managed-project/managed-project.service";
 import { logNotionSetupInstructions } from "./notion/notion.oauth";
 
-const port = Number(Bun.env["PORT"] ?? 3000);
+const port = environment.port;
 
 app.listen(port);
 

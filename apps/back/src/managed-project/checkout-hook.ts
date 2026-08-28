@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { environment } from "../environment";
 import { getCurrentRef } from "../utils/git/getCurrentRef";
 import { getManagedProjectScriptPath } from "./managed-project-scripts";
 
@@ -19,7 +20,7 @@ export async function runCheckoutHook(repositoryPath: string) {
   const hook = Bun.spawn(["/bin/sh", hookPath], {
     cwd: repositoryPath,
     env: {
-      ...process.env,
+      ...environment.all,
       REGALATOR_BRANCH_ID: branchId,
     },
     stdin: "ignore",

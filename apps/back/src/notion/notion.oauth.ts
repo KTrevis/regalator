@@ -1,3 +1,5 @@
+import { environment } from "../environment";
+
 const NOTION_TOKEN_PATH = new URL("./notion-token.txt", import.meta.url)
   .pathname;
 
@@ -73,7 +75,7 @@ function getNotionAuthorizationUrl() {
 }
 
 function getNotionRedirectUri() {
-  return `${getBackPublicUrl()}/api/notion/oauth/callback`;
+  return `${environment.publicUrl}/api/notion/oauth/callback`;
 }
 
 export function getNotionTokenPath() {
@@ -110,17 +112,9 @@ export function logNotionSetupInstructions() {
 }
 
 function getNotionClientId() {
-  return Bun.env["NOTION_CLIENT_ID"]?.trim();
+  return environment.notionClientId;
 }
 
 function getNotionClientSecret() {
-  return Bun.env["NOTION_CLIENT_SECRET"]?.trim();
-}
-
-function getBackPublicUrl() {
-  return Bun.env["BACK_PUBLIC_URL"]?.trim() || `http://localhost:${getPort()}`;
-}
-
-function getPort() {
-  return Bun.env["PORT"]?.trim() || "3000";
+  return environment.notionClientSecret;
 }

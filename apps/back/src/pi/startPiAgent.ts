@@ -8,6 +8,7 @@ import { AgentRunStatus } from "../generated/prisma/enums";
 import { prisma } from "../lib/prisma";
 import { commitWorktreeChanges } from "../utils/git/commitWorktreeChanges";
 import { removeWorktree } from "../utils/git/gitWorktrees";
+import { pushWorktreeBranch } from "../utils/git/pushWorktreeBranch";
 
 const DEFAULT_AGENT_TOOLS = ["read", "bash", "edit", "write"];
 
@@ -140,6 +141,7 @@ async function cleanupCompletedWorktree(
   }
 
   await commitWorktreeChanges(worktreePath, `notion(${notionPageId})`);
+  await pushWorktreeBranch(worktreePath);
   await removeWorktree(CONFIG.repoPath, worktreePath);
 }
 

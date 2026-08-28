@@ -1,15 +1,12 @@
 import { resolve } from "node:path";
+import { environment } from "./environment";
 
-const projectPath = Bun.env["REGALATOR_PROJECT_PATH"];
-
-if (!projectPath) {
-  throw new Error("REGALATOR_PROJECT_PATH is required.");
-}
+const projectPath = environment.projectPath;
 
 export const CONFIG = {
   repoPath: resolve(projectPath),
   worktreesPath: resolve(
-    Bun.env["REGALATOR_WORKTREES_PATH"] ?? `${projectPath}-worktrees`,
+    environment.worktreesPath ?? `${projectPath}-worktrees`,
   ),
   defaultBaseBranch: "main",
 } as const;

@@ -1,8 +1,9 @@
 import { defineConfig } from "prisma/config";
+import { environment } from "./src/environment";
 
 export default defineConfig({
   datasource: {
-    url: process.env["DATABASE_URL"] ?? "file:./dev.db",
+    url: environment.databaseUrl,
   },
   schema: "prisma/schema",
 });

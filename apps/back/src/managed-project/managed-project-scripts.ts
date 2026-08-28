@@ -1,24 +1,26 @@
 import { stat } from "node:fs/promises";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 import { $ } from "bun";
+import { environment } from "../environment";
 
-const SCRIPT_ENV_NAMES = {
-  checkoutHook: "REGALATOR_CHECKOUT_HOOK",
-  start: "REGALATOR_START_SCRIPT",
-} as const;
-
-const SCRIPT_LABELS: Record<ManagedProjectScript, string> = {
-  checkoutHook: "checkout hook",
-  start: "startup script",
+const MANAGED_PROJECT_SCRIPTS = {
+  checkoutHook: {
+    getConfiguredPath: () => environment.projectCheckoutHook,
+    label: "checkout hook",
+  },
+  start: {
+    getConfiguredPath: () => environment.projectStartScript,
+    label: "startup script",
+  },
 };
 
-type ManagedProjectScript = keyof typeof SCRIPT_ENV_NAMES;
+type ManagedProjectScript = keyof typeof MANAGED_PROJECT_SCRIPTS;
 
 export function getManagedProjectScriptPath(
   repositoryPath: string,
   script: ManagedProjectScript,
 ) {
-  const configuredPath = Bun.env[SCRIPT_ENV_NAMES[script]];
+  const configuredPath = MANAGED_PROJECT_SCRIPTS[script].getConfiguredPath();
   return configuredPath ? resolve(repositoryPath, configuredPath) : undefined;
 }
 
@@ -53,15 +55,13 @@ async function getMissingScripts(
 ) {
   const missingScripts: Array<{ label: string; path: string }> = [];
 
-  for (const [script, envName] of Object.entries(SCRIPT_ENV_NAMES) as Array<
-    [ManagedProjectScript, string]
-  >) {
-    const configuredPath = Bun.env[envName];
+  for (const script of Object.values(MANAGED_PROJECT_SCRIPTS)) {
+    const configuredPath = script.getConfiguredPath();
     if (!configuredPath) continue;
 
     const scriptPath = resolve(repositoryPath, configuredPath);
     if (!(await exists(scriptPath))) {
-      missingScripts.push({ label: SCRIPT_LABELS[script], path: scriptPath });
+      missingScripts.push({ label: script.label, path: scriptPath });
     }
   }
 

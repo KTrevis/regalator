@@ -1,6 +1,7 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
+import { environment } from "../environment";
 import { PrismaClient } from "../generated/prisma/client";
 
 const adapter = new PrismaLibSql({
@@ -10,7 +11,7 @@ const adapter = new PrismaLibSql({
 export const prisma = new PrismaClient({ adapter });
 
 function getDatabaseUrl() {
-  const url = Bun.env["DATABASE_URL"] ?? "file:./dev.db";
+  const url = environment.databaseUrl;
 
   if (!url.startsWith("file:")) {
     return url;

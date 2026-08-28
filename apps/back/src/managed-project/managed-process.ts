@@ -1,3 +1,4 @@
+import { environment } from "../environment";
 import { getManagedProjectScriptPath } from "./managed-project-scripts";
 
 const READY_TIMEOUT_MS = 30_000;
@@ -11,7 +12,7 @@ export function spawnManagedProject(repositoryPath: string) {
   return Bun.spawn(["/bin/sh", startScriptPath], {
     cwd: repositoryPath,
     detached: true,
-    env: process.env,
+    env: environment.all,
     stdin: "inherit",
     stdout: "inherit",
     stderr: "inherit",
@@ -31,9 +32,9 @@ export async function stopManagedProjectProcess(
 export async function waitForManagedProjectReady(
   process: ManagedProjectProcess | undefined,
 ) {
-  const backendUrl = Bun.env["REGALATOR_BACKEND_URL"];
+  const projectBackendUrl = environment.projectBackendUrl;
 
-  if (!backendUrl) {
+  if (!projectBackendUrl) {
     await Bun.sleep(100);
     assertProcessRunning(process);
     return;
@@ -43,7 +44,7 @@ export async function waitForManagedProjectReady(
   while (Date.now() < deadline) {
     assertProcessRunning(process);
 
-    const reachable = await fetch(backendUrl, {
+    const reachable = await fetch(projectBackendUrl, {
       signal: AbortSignal.timeout(1_000),
     }).then(
       () => true,
