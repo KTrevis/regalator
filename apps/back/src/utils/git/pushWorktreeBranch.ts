@@ -2,6 +2,11 @@ import { $ } from "bun";
 import { environment } from "../../environment";
 
 export async function pushWorktreeBranch(worktreePath: string) {
+  const remotes = await $`git -C ${worktreePath} remote`.text();
+  if (!remotes.split("\n").includes("origin")) {
+    return;
+  }
+
   const githubPat = environment.githubPat;
 
   if (!githubPat) {
