@@ -16,11 +16,6 @@ export function GitBranchList() {
         disabled={isPending || isError}
         pending={switchBranch.isPending}
       />
-      {switchBranch.error && (
-        <p className="mt-2 text-sm text-destructive">
-          {switchBranch.error.message}
-        </p>
-      )}
     </div>
   );
 }

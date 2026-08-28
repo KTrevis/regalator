@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeftIcon, SettingsIcon } from "lucide-react";
+import { ArrowLeftIcon, LoaderCircleIcon, SettingsIcon } from "lucide-react";
 import { AgentRunList } from "./components/AgentRunList";
 import { DraggableLauncher } from "./components/DraggableLauncher";
 import { GitBranchList } from "./components/GitBranchList";
@@ -15,6 +15,7 @@ import {
   notifyDrawerState,
   subscribeToHostDrawerClose,
 } from "./lib/embed-frame";
+import { useIsSwitchingBranch } from "./queries/git.query";
 
 export const App = () => {
   const [open, setOpen] = useState(false);
@@ -33,6 +34,7 @@ export const App = () => {
       <Sheet open={open} onOpenChange={setDrawerOpen}>
         <DraggableLauncher onOpen={() => setDrawerOpen(true)} />
         <SheetContent className="!w-full !max-w-none">
+          <BranchSwitchStatus />
           {view === "runs" ? (
             <RunsView onOpenSettings={() => setView("settings")} />
           ) : (
@@ -43,6 +45,24 @@ export const App = () => {
     </main>
   );
 };
+
+function BranchSwitchStatus() {
+  const isSwitchingBranch = useIsSwitchingBranch();
+
+  if (!isSwitchingBranch) return null;
+
+  return (
+    <div className="absolute inset-0 z-10 flex items-center justify-center bg-popover/80 backdrop-blur-xs">
+      <div
+        className="flex items-center gap-2 rounded-full bg-primary px-4 py-3 font-medium text-primary-foreground shadow-lg"
+        role="status"
+      >
+        <LoaderCircleIcon className="size-4 animate-spin" />
+        Switching branch…
+      </div>
+    </div>
+  );
+}
 
 function RunsView({ onOpenSettings }: { onOpenSettings: () => void }) {
   return (

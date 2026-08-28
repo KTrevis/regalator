@@ -8,7 +8,10 @@ import {
   stopManagedProjectProcess,
   waitForManagedProjectReady,
 } from "./managed-process";
-import { assertManagedProjectScriptsExist } from "./managed-project-scripts";
+import {
+  assertManagedProjectScriptsExist,
+  assertManagedProjectScriptsExistOnBranch,
+} from "./managed-project-scripts";
 
 let managedProcess: ManagedProjectProcess | undefined;
 let lifecycleRunning = false;
@@ -17,7 +20,9 @@ export function startManagedProject() {
   return runLifecycleOperation(prepareAndStartProject);
 }
 
-export function switchManagedProjectBranch(branch: string) {
+export async function switchManagedProjectBranch(branch: string) {
+  await assertManagedProjectScriptsExistOnBranch(CONFIG.repoPath, branch);
+
   return runLifecycleOperation(async () => {
     const previousRef = await getCurrentRef(CONFIG.repoPath);
     await stopManagedProject();

@@ -10,6 +10,7 @@ export function spawnManagedProject(repositoryPath: string) {
 
   return Bun.spawn(["/bin/sh", startScriptPath], {
     cwd: repositoryPath,
+    detached: true,
     env: process.env,
     stdin: "inherit",
     stdout: "inherit",
@@ -18,13 +19,13 @@ export function spawnManagedProject(repositoryPath: string) {
 }
 
 export async function stopManagedProjectProcess(
-  process: ManagedProjectProcess | undefined,
+  managedProcess: ManagedProjectProcess | undefined,
   signal: "SIGINT" | "SIGTERM" = "SIGTERM",
 ) {
-  if (!process || process.killed || process.exitCode !== null) return;
+  if (!managedProcess || managedProcess.exitCode !== null) return;
 
-  process.kill(signal);
-  await process.exited;
+  process.kill(-managedProcess.pid, signal);
+  await managedProcess.exited;
 }
 
 export async function waitForManagedProjectReady(

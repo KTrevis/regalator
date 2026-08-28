@@ -5,7 +5,7 @@ import { prisma } from "../lib/prisma";
 import { startPiAgent } from "../pi/startPiAgent";
 import { getDefaultBaseBranch } from "../settings/settings.service";
 import { createTaskWorktree } from "../utils/git/createTaskWorktree";
-import { getPageDescription } from "./notion.page-description";
+import { getPageContent } from "./notion.page-content";
 import { getPageTitle } from "./notion.title";
 
 type NotionPageWebhook = {
@@ -27,9 +27,9 @@ export async function startNotionAgentRun(webhookBody: NotionPageWebhook) {
     };
   }
 
-  const [pageTitle, description, baseBranch] = await Promise.all([
+  const [pageTitle, pageContent, baseBranch] = await Promise.all([
     getPageTitle(pageId),
-    getPageDescription(pageId),
+    getPageContent(pageId),
     getDefaultBaseBranch(),
   ]);
   const title = pageTitle || pageId;
@@ -51,7 +51,8 @@ export async function startNotionAgentRun(webhookBody: NotionPageWebhook) {
 
   startPiAgent({
     title,
-    description,
+    description: pageContent.description,
+    images: pageContent.images,
     cwd: worktree.worktreePath,
     agentRunId: agentRun.id,
     worktreePath: worktree.worktreePath,

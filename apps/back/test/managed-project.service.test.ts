@@ -24,7 +24,18 @@ mock.module("../src/utils/git/switchBranch", () => ({
 mock.module("../src/managed-project/managed-project-scripts", () => ({
   assertManagedProjectScriptsExist: async () => {
     events.push(`check-scripts:${currentRef}`);
-    if (currentRef === "legacy") throw new Error("Scripts are missing.");
+    if (currentRef === "broken") throw new Error("Preparation failed.");
+  },
+  assertManagedProjectScriptsExistOnBranch: async (
+    _repositoryPath: string,
+    branch: string,
+  ) => {
+    events.push(`check-branch-scripts:${branch}`);
+    if (branch === "legacy") {
+      throw new Error(
+        'Branch "legacy" cannot be checked out because the following managed project scripts are missing: checkout hook, startup script.',
+      );
+    }
   },
 }));
 
@@ -37,8 +48,11 @@ mock.module("../src/managed-project/managed-process", () => ({
     events.push(`start:${currentRef}`);
     return { ref: currentRef };
   },
-  stopManagedProjectProcess: async (process?: { ref: string }) => {
-    events.push(`stop:${process?.ref ?? "none"}`);
+  stopManagedProjectProcess: async (
+    process?: { ref: string },
+    signal = "SIGTERM",
+  ) => {
+    events.push(`stop:${process?.ref ?? "none"}:${signal}`);
   },
   waitForManagedProjectReady: async () => events.push(`ready:${currentRef}`),
 }));
@@ -46,20 +60,31 @@ mock.module("../src/managed-project/managed-process", () => ({
 const { startManagedProject, stopManagedProject, switchManagedProjectBranch } =
   await import("../src/managed-project/managed-project.service");
 
-test("restores and keeps the previous branch running when scripts are missing", async () => {
+test("rejects a branch with missing managed project scripts before switching", async () => {
   await startManagedProject();
   events.length = 0;
 
   await expect(switchManagedProjectBranch("legacy")).rejects.toThrow(
-    "Failed to switch to legacy; restored main.",
+    'Branch "legacy" cannot be checked out because the following managed project scripts are missing: checkout hook, startup script.',
+  );
+
+  expect(events).toEqual(["check-branch-scripts:legacy"]);
+});
+
+test("restores and keeps the previous branch running after preparation fails", async () => {
+  events.length = 0;
+
+  await expect(switchManagedProjectBranch("broken")).rejects.toThrow(
+    "Failed to switch to broken; restored main.",
   );
 
   expect(events).toEqual([
+    "check-branch-scripts:broken",
     "get-ref:main",
-    "stop:main",
-    "checkout:legacy",
-    "check-scripts:legacy",
-    "stop:none",
+    "stop:main:SIGTERM",
+    "checkout:broken",
+    "check-scripts:broken",
+    "stop:none:SIGTERM",
     "checkout:main",
     "check-scripts:main",
     "hook:main",
@@ -69,5 +94,5 @@ test("restores and keeps the previous branch running when scripts are missing", 
 
   events.length = 0;
   await stopManagedProject();
-  expect(events).toEqual(["stop:main"]);
+  expect(events).toEqual(["stop:main:SIGTERM"]);
 });
