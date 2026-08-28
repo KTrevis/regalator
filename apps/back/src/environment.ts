@@ -4,10 +4,10 @@ type EnvironmentVariableName =
   | "NOTION_CLIENT_ID"
   | "NOTION_CLIENT_SECRET"
   | "PORT"
+  | "REGALATOR_BACKEND_URL"
   | "REGALATOR_CHECKOUT_HOOK"
   | "REGALATOR_PROJECT_BACKEND_URL"
   | "REGALATOR_PROJECT_PATH"
-  | "REGALATOR_PUBLIC_URL"
   | "REGALATOR_START_SCRIPT"
   | "REGALATOR_WORKTREES_PATH";
 
@@ -71,9 +71,9 @@ export const environment = {
   get projectStartScript() {
     return readEnvironmentVariable("REGALATOR_START_SCRIPT");
   },
-  get publicUrl() {
+  get backendUrl() {
     return (
-      readTrimmedEnvironmentVariable("REGALATOR_PUBLIC_URL") ??
+      readTrimmedEnvironmentVariable("REGALATOR_BACKEND_URL") ??
       `http://localhost:${getPort()}`
     );
   },

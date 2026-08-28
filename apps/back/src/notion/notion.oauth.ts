@@ -75,7 +75,7 @@ function getNotionAuthorizationUrl() {
 }
 
 function getNotionRedirectUri() {
-  return `${environment.publicUrl}/api/notion/oauth/callback`;
+  return `${environment.backendUrl}/api/notion/oauth/callback`;
 }
 
 export function getNotionTokenPath() {

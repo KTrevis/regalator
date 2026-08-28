@@ -32,7 +32,7 @@ cp apps/back/.env.example apps/back/.env
 Add the managed project configuration to `apps/back/.env`:
 
 ```env
-REGALATOR_PUBLIC_URL=https://regalator.example.com
+REGALATOR_BACKEND_URL=https://regalator.example.com
 REGALATOR_PROJECT_PATH=/absolute/path/to/project
 REGALATOR_CHECKOUT_HOOK=/absolute/path/to/project/scripts/regalator/checkout-hook.sh
 REGALATOR_START_SCRIPT=/absolute/path/to/project/scripts/regalator/startup.sh
@@ -42,7 +42,7 @@ REGALATOR_PROJECT_BACKEND_URL=http://127.0.0.1:8080
 REGALATOR_WORKTREES_PATH=/absolute/path/to/project-worktrees
 ```
 
-`REGALATOR_PUBLIC_URL` is the public Regalator origin, including its protocol and without `/api` or a trailing slash. It must serve the frontend and forward `/api` requests to the backend.
+`REGALATOR_BACKEND_URL` is the public Regalator backend origin, including its protocol and without `/api` or a trailing slash.
 
 `REGALATOR_PROJECT_PATH` is the absolute path to the Git repository that Regalator manages. The checkout hook and startup script live in that repository under `scripts/regalator/`.
 
@@ -113,10 +113,10 @@ By default, the backend listens on `http://localhost:3000` and the frontend on `
 Add the following element to the managed website, ideally near the end of `<body>`:
 
 ```html
-<script src="<REGALATOR_PUBLIC_URL>/embed.js" async></script>
+<script src="<REGALATOR_FRONTEND_URL>/embed.js" async></script>
 ```
 
-Replace `<REGALATOR_PUBLIC_URL>` with the value configured in `apps/back/.env`. The script injects a movable Regalator launcher and opens the interface in an iframe.
+Replace `<REGALATOR_FRONTEND_URL>` with the public origin that serves the Regalator frontend. The script injects a movable Regalator launcher and opens the interface in an iframe.
 
 When embedding Regalator:
 
@@ -145,10 +145,10 @@ The configured `origin` may use either a GitHub HTTPS URL or a standard GitHub S
 
 ### Expose Regalator
 
-Notion must be able to reach `REGALATOR_PUBLIC_URL`. Use a public hostname or the server IP, including its protocol and port when required:
+Notion must be able to reach `REGALATOR_BACKEND_URL`. Use a public hostname or the server IP, including its protocol and port when required:
 
 ```text
-<REGALATOR_PUBLIC_URL>/api/notion/webhook
+<REGALATOR_BACKEND_URL>/api/notion/webhook
 ```
 
 Prefer HTTPS and restrict access to the server as much as the Notion integration allows. The webhook currently has no application-level authentication and starts an agent for every valid payload it receives.
@@ -159,7 +159,7 @@ Prefer HTTPS and restrict access to the server as much as the Notion integration
 2. Register this redirect URI:
 
    ```text
-   <REGALATOR_PUBLIC_URL>/api/notion/oauth/callback
+   <REGALATOR_BACKEND_URL>/api/notion/oauth/callback
    ```
 
 3. Copy the integration credentials to `apps/back/.env`:
@@ -187,7 +187,7 @@ In the Notion kanban database:
 4. Add a webhook action with this URL:
 
    ```text
-   <REGALATOR_PUBLIC_URL>/api/notion/webhook
+   <REGALATOR_BACKEND_URL>/api/notion/webhook
    ```
 
 5. Save and enable the automation.

@@ -5,8 +5,8 @@ const testedVariables = [
   "DATABASE_URL",
   "GITHUB_PAT",
   "PORT",
+  "REGALATOR_BACKEND_URL",
   "REGALATOR_PROJECT_PATH",
-  "REGALATOR_PUBLIC_URL",
 ] as const;
 const originalValues = Object.fromEntries(
   testedVariables.map((name) => [name, environment.all[name]]),
@@ -35,11 +35,11 @@ test("requires the managed project path when it is accessed", () => {
 test("provides defaults without requiring unrelated variables", () => {
   delete environment.all["DATABASE_URL"];
   delete environment.all["PORT"];
-  delete environment.all["REGALATOR_PUBLIC_URL"];
+  delete environment.all["REGALATOR_BACKEND_URL"];
 
   expect(environment.databaseUrl).toBe("file:./dev.db");
   expect(environment.port).toBe(3000);
-  expect(environment.publicUrl).toBe("http://localhost:3000");
+  expect(environment.backendUrl).toBe("http://localhost:3000");
 });
 
 test("rejects an invalid port", () => {
