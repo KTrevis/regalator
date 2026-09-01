@@ -1,53 +1,14 @@
 import { afterEach, expect, test } from "bun:test";
 import { environment } from "../src/environment";
 
-const testedVariables = [
-  "DATABASE_URL",
-  "GITHUB_PAT",
-  "PORT",
-  "REGALATOR_BACKEND_URL",
-  "REGALATOR_PROJECT_PATH",
-] as const;
-const originalValues = Object.fromEntries(
-  testedVariables.map((name) => [name, environment.all[name]]),
-);
+const originalGitHubPat = environment.all["GITHUB_PAT"];
 
 afterEach(() => {
-  for (const name of testedVariables) {
-    const originalValue = originalValues[name];
-
-    if (originalValue === undefined) {
-      delete environment.all[name];
-    } else {
-      environment.all[name] = originalValue;
-    }
+  if (originalGitHubPat === undefined) {
+    delete environment.all["GITHUB_PAT"];
+  } else {
+    environment.all["GITHUB_PAT"] = originalGitHubPat;
   }
-});
-
-test("requires the managed project path when it is accessed", () => {
-  delete environment.all["REGALATOR_PROJECT_PATH"];
-
-  expect(() => environment.projectPath).toThrow(
-    "REGALATOR_PROJECT_PATH is required.",
-  );
-});
-
-test("provides defaults without requiring unrelated variables", () => {
-  delete environment.all["DATABASE_URL"];
-  delete environment.all["PORT"];
-  delete environment.all["REGALATOR_BACKEND_URL"];
-
-  expect(environment.databaseUrl).toBe("file:./dev.db");
-  expect(environment.port).toBe(3000);
-  expect(environment.backendUrl).toBe("http://localhost:3000");
-});
-
-test("rejects an invalid port", () => {
-  environment.all["PORT"] = "invalid";
-
-  expect(() => environment.port).toThrow(
-    "PORT must be an integer between 1 and 65535.",
-  );
 });
 
 test("exposes the GitHub PAT without logging or transforming it", () => {

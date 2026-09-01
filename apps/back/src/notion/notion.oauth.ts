@@ -1,7 +1,5 @@
 import { environment } from "../environment";
-
-const NOTION_TOKEN_PATH = new URL("./notion-token.txt", import.meta.url)
-  .pathname;
+import { CONFIG } from "../config";
 
 const NOTION_OAUTH_URL = "https://api.notion.com/v1/oauth/authorize";
 const NOTION_TOKEN_URL = "https://api.notion.com/v1/oauth/token";
@@ -55,7 +53,7 @@ export async function storeNotionAccessToken(code: string) {
     );
   }
 
-  await Bun.write(NOTION_TOKEN_PATH, data.access_token);
+  await Bun.write(CONFIG.projectFiles.notionToken, data.access_token);
 }
 
 function getNotionAuthorizationUrl() {
@@ -79,7 +77,7 @@ function getNotionRedirectUri() {
 }
 
 export function getNotionTokenPath() {
-  return NOTION_TOKEN_PATH;
+  return CONFIG.projectFiles.notionToken;
 }
 
 export function logNotionSetupInstructions() {
@@ -95,7 +93,7 @@ export function logNotionSetupInstructions() {
   );
   console.log(`2. Register this redirect URI: ${getNotionRedirectUri()}`);
   console.log(
-    "3. Add NOTION_CLIENT_ID and NOTION_CLIENT_SECRET to apps/back/.env",
+    `3. Add NOTION_CLIENT_ID and NOTION_CLIENT_SECRET to ${CONFIG.projectFiles.environment}`,
   );
   console.log(
     `4. The generated token will be saved to: ${getNotionTokenPath()}`,
