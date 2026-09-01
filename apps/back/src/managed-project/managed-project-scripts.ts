@@ -1,16 +1,19 @@
 import { stat } from "node:fs/promises";
-import { isAbsolute, relative, resolve, sep } from "node:path";
+import { isAbsolute, relative, sep } from "node:path";
 import { $ } from "bun";
-import { environment } from "../environment";
+import { getProjectFiles } from "../project-files";
+import { assertScriptTemplatesCompleted } from "./script-template";
 
 const MANAGED_PROJECT_SCRIPTS = {
   checkoutHook: {
-    getConfiguredPath: () => environment.projectCheckoutHook,
     label: "checkout hook",
+    path: (repositoryPath: string) =>
+      getProjectFiles(repositoryPath).checkoutHook,
   },
   start: {
-    getConfiguredPath: () => environment.projectStartScript,
     label: "startup script",
+    path: (repositoryPath: string) =>
+      getProjectFiles(repositoryPath).startupScript,
   },
 };
 
@@ -20,8 +23,7 @@ export function getManagedProjectScriptPath(
   repositoryPath: string,
   script: ManagedProjectScript,
 ) {
-  const configuredPath = MANAGED_PROJECT_SCRIPTS[script].getConfiguredPath();
-  return configuredPath ? resolve(repositoryPath, configuredPath) : undefined;
+  return MANAGED_PROJECT_SCRIPTS[script].path(repositoryPath);
 }
 
 export async function assertManagedProjectScriptsExist(repositoryPath: string) {
@@ -32,6 +34,8 @@ export async function assertManagedProjectScriptsExist(repositoryPath: string) {
       `Managed project scripts not found: ${formatScripts(missingScripts)}.`,
     );
   }
+
+  await assertScriptTemplatesCompleted(repositoryPath);
 }
 
 export async function assertManagedProjectScriptsExistOnBranch(
@@ -56,10 +60,7 @@ async function getMissingScripts(
   const missingScripts: Array<{ label: string; path: string }> = [];
 
   for (const script of Object.values(MANAGED_PROJECT_SCRIPTS)) {
-    const configuredPath = script.getConfiguredPath();
-    if (!configuredPath) continue;
-
-    const scriptPath = resolve(repositoryPath, configuredPath);
+    const scriptPath = script.path(repositoryPath);
     if (!(await exists(scriptPath))) {
       missingScripts.push({ label: script.label, path: scriptPath });
     }

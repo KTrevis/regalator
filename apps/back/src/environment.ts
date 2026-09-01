@@ -1,15 +1,11 @@
+import { CONFIG } from "./config";
+
 type EnvironmentVariableName =
   | "DATABASE_URL"
   | "GITHUB_PAT"
   | "NOTION_CLIENT_ID"
   | "NOTION_CLIENT_SECRET"
-  | "PORT"
-  | "REGALATOR_BACKEND_URL"
-  | "REGALATOR_CHECKOUT_HOOK"
-  | "REGALATOR_PROJECT_HEALTHCHECK_URL"
-  | "REGALATOR_PROJECT_PATH"
-  | "REGALATOR_START_SCRIPT"
-  | "REGALATOR_WORKTREES_PATH";
+  | "REGALATOR_WEB_ROOT";
 
 function readEnvironmentVariable(name: EnvironmentVariableName) {
   return process.env[name];
@@ -19,33 +15,15 @@ function readTrimmedEnvironmentVariable(name: EnvironmentVariableName) {
   return readEnvironmentVariable(name)?.trim() || undefined;
 }
 
-function requireEnvironmentVariable(name: EnvironmentVariableName) {
-  const value = readEnvironmentVariable(name);
-
-  if (!value) {
-    throw new Error(`${name} is required.`);
-  }
-
-  return value;
-}
-
-function getPort() {
-  const value = readTrimmedEnvironmentVariable("PORT");
-  const port = value ? Number(value) : 3000;
-
-  if (!Number.isInteger(port) || port < 1 || port > 65_535) {
-    throw new Error("PORT must be an integer between 1 and 65535.");
-  }
-
-  return port;
-}
-
 export const environment = {
   get all() {
     return process.env;
   },
   get databaseUrl() {
-    return readEnvironmentVariable("DATABASE_URL") ?? "file:./dev.db";
+    return (
+      readEnvironmentVariable("DATABASE_URL") ??
+      `file:${CONFIG.projectFiles.database}`
+    );
   },
   get githubPat() {
     return readEnvironmentVariable("GITHUB_PAT");
@@ -57,27 +35,15 @@ export const environment = {
     return readTrimmedEnvironmentVariable("NOTION_CLIENT_SECRET");
   },
   get port() {
-    return getPort();
+    return CONFIG.project.port;
   },
   get projectHealthcheckUrl() {
-    return readEnvironmentVariable("REGALATOR_PROJECT_HEALTHCHECK_URL");
-  },
-  get projectCheckoutHook() {
-    return readEnvironmentVariable("REGALATOR_CHECKOUT_HOOK");
-  },
-  get projectPath() {
-    return requireEnvironmentVariable("REGALATOR_PROJECT_PATH");
-  },
-  get projectStartScript() {
-    return readEnvironmentVariable("REGALATOR_START_SCRIPT");
+    return CONFIG.project.projectHealthcheckUrl;
   },
   get backendUrl() {
-    return (
-      readTrimmedEnvironmentVariable("REGALATOR_BACKEND_URL") ??
-      `http://localhost:${getPort()}`
-    );
+    return CONFIG.project.backendUrl;
   },
-  get worktreesPath() {
-    return readEnvironmentVariable("REGALATOR_WORKTREES_PATH");
+  get webRoot() {
+    return readTrimmedEnvironmentVariable("REGALATOR_WEB_ROOT");
   },
 } as const;

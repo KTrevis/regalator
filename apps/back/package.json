@@ -9,13 +9,16 @@
       "default": "./dist/empty.js"
     }
   },
-  "files": ["dist/api-types.d.ts", "dist/app.d.ts", "dist/empty.js"],
+  "files": [
+    "dist/api-types.d.ts",
+    "dist/app.d.ts",
+    "dist/empty.js"
+  ],
   "scripts": {
     "dev": "bun --watch src/index.ts",
     "build": "tsc -p tsconfig.build.json && bun build src/index.ts src/empty.ts --target=bun --outdir=dist --external @regalator/shared",
     "check-types": "tsc --noEmit",
-    "db:generate": "prisma generate",
-    "db:push": "prisma db push"
+    "db:generate": "prisma generate"
   },
   "dependencies": {
     "@earendil-works/pi-coding-agent": "^0.84.3",

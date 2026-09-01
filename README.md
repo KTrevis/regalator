@@ -1,64 +1,77 @@
 # Regalator
 
-Regalator does not assume a package manager, runtime, database engine, or migration tool. The managed project defines its own preparation and startup scripts.
+Regalator switches the branch of a running web project and prepares, starts,
+and checks that project through repository-owned shell scripts. It can also
+turn Notion tickets into committed Git branches through a coding agent.
 
 ## Prerequisites
 
 - [Bun](https://bun.sh/) 1.3.5 or later;
-- a Git repository with the branches that Regalator should manage available locally or on the `origin` remote;
-- a web project that can be started by a long-running shell script;
-- a backend endpoint that Regalator can use as a readiness check;
-- a public Regalator URL reachable by the managed website and, for the Notion integration, by Notion.
+- a Git repository whose branches are available locally or on `origin`;
+- a public HTTPS URL reachable by the managed website and Notion;
+- a backend healthcheck that responds when the managed project is ready.
 
-The managed repository should have a clean working tree before Regalator switches or pulls branches. Branches already checked out in another Git worktree are not available in the branch picker.
+The managed repository should have a clean working tree before Regalator
+switches or pulls branches. Branches checked out in another Git worktree are
+not available in the branch picker.
 
-## Install Regalator
+## Install
 
-Install the dependencies and initialize the local database:
-
-```sh
-bun install
-bun run --cwd apps/back db:push
-```
-
-Copy the backend environment template:
+Run the setup command from anywhere inside the Git repository that Regalator
+should manage:
 
 ```sh
-cp apps/back/.env.example apps/back/.env
+bunx @regalator/cli setup
 ```
 
-## Configure the managed project
+The command finds the repository root, asks for the public Regalator URL and
+the managed project healthcheck, and creates:
 
-Add the managed project configuration to `apps/back/.env`:
-
-```env
-REGALATOR_BACKEND_URL=https://regalator.example.com
-REGALATOR_PROJECT_PATH=/absolute/path/to/project
-REGALATOR_CHECKOUT_HOOK=/absolute/path/to/project/scripts/regalator/checkout-hook.sh
-REGALATOR_START_SCRIPT=/absolute/path/to/project/scripts/regalator/startup.sh
-REGALATOR_PROJECT_HEALTHCHECK_URL=http://127.0.0.1:8080
-
-# Optional. Defaults to <REGALATOR_PROJECT_PATH>-worktrees.
-REGALATOR_WORKTREES_PATH=/absolute/path/to/project-worktrees
+```text
+.regalator/
+├── .env
+├── .gitignore
+├── checkout-hook.sh
+├── config.json
+└── startup.sh
 ```
 
-`REGALATOR_BACKEND_URL` is the public origin through which the Regalator backend is exposed, including its protocol and without `/api` or a trailing slash. Prefer the shared-origin setup described below.
+The setup is safe to run again. Existing files are validated but never
+overwritten. `.regalator/config.json` and the two shell scripts should be
+committed. `.regalator/.env` and `.regalator/state/` remain local and ignored.
 
-`REGALATOR_PROJECT_PATH` is the absolute path to the Git repository that Regalator manages. The checkout hook and startup script live in that repository under `scripts/regalator/`.
+Complete the generated shell scripts, add the requested GitHub and Notion
+credentials to `.regalator/.env`, then start Regalator:
 
-The two scripts should be committed to every branch that can be selected in Regalator. A branch that does not contain them is rejected before checkout.
+```sh
+bunx @regalator/cli start
+```
+
+The start command initializes or migrates the local SQLite database and serves
+the frontend, `embed.js`, and `/api` from the configured port. It stays in the
+foreground until it receives `SIGTERM` or `SIGINT`.
+
+## Managed project scripts
+
+The script paths are fixed:
+
+- `.regalator/checkout-hook.sh` prepares the selected branch;
+- `.regalator/startup.sh` owns the long-running managed project process.
+
+Both files must be committed to every branch that Regalator can select. A
+branch without them is rejected before checkout. Regalator also refuses to
+start while either generated template still contains its setup marker.
 
 ### Checkout hook
 
-The checkout hook is a finite preparation script. Regalator runs it:
+Regalator runs the checkout hook on initial startup, after every branch switch,
+and while restoring the previous branch after a failed switch. Use it to
+install dependencies, generate environment files, prepare a branch-specific
+database, and run migrations.
 
-- when the managed project first starts;
-- after every branch switch;
-- after restoring the previous branch when a switch fails.
-
-Use it for tasks such as installing dependencies, generating environment files, provisioning a branch-specific database, and running migrations.
-
-Regalator executes the hook with `/bin/sh` from the repository root and exposes `REGALATOR_BRANCH_ID`, a stable 12-character identifier derived from the current branch name.
+The hook runs with `/bin/sh` from the repository root. It receives
+`REGALATOR_BRANCH_ID`, a stable 12-character identifier derived from the branch
+name. It must be idempotent and finish within five minutes.
 
 ```sh
 #!/bin/sh
@@ -69,13 +82,11 @@ pnpm install --frozen-lockfile
 pnpm db:migrate:deploy
 ```
 
-The hook should be idempotent. It must exit successfully before Regalator starts the project and must complete within five minutes. If it fails during a branch switch, Regalator checks out and restarts the previous branch.
-
 ### Startup script
 
-The startup script owns the long-running project process. It must stay in the foreground and shut the entire project down when it receives `SIGTERM` or `SIGINT`.
-
-Use `exec` when the project has a single development command so that signals reach it directly:
+The startup script must keep the project in the foreground and shut down the
+entire project when it receives `SIGTERM` or `SIGINT`. Use `exec` for a single
+development command so signals reach it directly:
 
 ```sh
 #!/bin/sh
@@ -84,158 +95,114 @@ set -eu
 exec pnpm dev
 ```
 
-Do not daemonize the project or leave child processes running after the script exits. During a branch switch, Regalator stops the current process group before checking out the selected branch.
+Do not daemonize the project or leave child processes running after the script
+exits. Regalator stops the current process group before switching branches.
 
 ### Readiness check
 
-After the startup script runs, Regalator waits for `REGALATOR_PROJECT_HEALTHCHECK_URL` to send a valid HTTP response before completing the branch switch request, which tells the Regalator frontend that the new branch is ready.
+After the startup script runs, Regalator waits for the configured healthcheck
+before completing a branch switch. Any HTTP response counts as ready. Requests
+time out after one second and are retried for up to 30 seconds.
 
-The current readiness check:
+Choose an endpoint that responds only when the application and its required
+dependencies are usable.
 
-- considers any HTTP response successful, regardless of its status code;
-- retries for up to 30 seconds;
-- times out each individual request after one second.
+## Public access and embedding
 
-Choose an endpoint that only starts responding once the application and its required dependencies are usable.
+Regalator serves its complete application from one local port, `3000` by
+default. Expose that port through the public HTTPS reverse proxy or tunnel of
+your choice. Regalator does not install or configure that infrastructure.
 
-## Run Regalator
-
-Start the backend and frontend from the repository root:
-
-```sh
-bun run dev
-```
-
-By default, the backend listens on `http://localhost:3000` and the frontend on `http://localhost:5173`. Make sure these ports do not conflict with the managed project. Set `PORT` for the Regalator backend if port 3000 is unavailable.
-
-### Expose a single public origin
-
-Expose the Regalator frontend and backend through the same public origin. Route `/api` requests to the backend and all other requests to the frontend. With the default local ports, the corresponding Caddy configuration is:
-
-```caddyfile
-regalator.example.com {
-  handle /api/* {
-    reverse_proxy 127.0.0.1:3000
-  }
-
-  handle {
-    reverse_proxy 127.0.0.1:5173
-  }
-}
-```
-
-Configure that origin once in the backend environment:
-
-```env
-REGALATOR_BACKEND_URL=https://regalator.example.com
-```
-
-The frontend always sends API requests to `window.location.origin`, so no frontend environment variable is required for the backend URL.
-
-## Embed Regalator in the managed website
-
-Add the following element to the managed website, ideally near the end of `<body>`:
+Add the embed script to the managed website, preferably near the end of
+`<body>`:
 
 ```html
-<script src="<REGALATOR_BACKEND_URL>/embed.js" async></script>
+<script src="https://regalator.example.com/embed.js" async></script>
 ```
 
-Replace `<REGALATOR_BACKEND_URL>` with the shared public origin configured in `apps/back/.env`. The script injects a movable Regalator launcher and opens the interface in an iframe.
+The browser must be able to reach the configured public URL. The managed
+website's Content Security Policy must allow the Regalator script and iframe
+origin. Expose Regalator only to trusted users because its API can switch
+branches and start coding agents.
 
-When embedding Regalator:
+## GitHub and Notion
 
-- the browser must be able to reach the URL that serves `embed.js`;
-- an HTTPS website must load Regalator over HTTPS to avoid mixed-content blocking;
-- the managed website's Content Security Policy must allow the Regalator script and iframe origins;
-- Regalator should only be exposed to trusted users because its API can switch branches and start coding agents.
+The setup command prints instructions and URLs derived from the configured
+public origin.
 
-## Connect Notion
+Create a fine-grained GitHub personal access token for the managed repository:
 
-The Notion integration reads a ticket, creates a dedicated branch and Git worktree, runs the coding agent there, commits the result, and removes the worktree when the run completes.
+1. Select the repository owner as the resource owner.
+2. Grant access only to the managed repository.
+3. Grant `Contents: Read and write`.
+4. Add the token as `GITHUB_PAT` in `.regalator/.env`.
 
-Agent branches are pushed to the repository's `origin` remote over HTTPS before their worktrees are removed. Create a fine-grained GitHub personal access token with the following configuration:
+The `origin` remote may use a GitHub HTTPS URL or a standard GitHub SSH URL.
+Regalator pushes through HTTPS without changing the repository configuration.
 
-1. Select the organization that owns the managed repository as the resource owner.
-2. Under repository access, select only the managed repository.
-3. Under repository permissions, grant `Contents: Read and write`.
-
-Add the generated token to `apps/back/.env`:
-
-```env
-GITHUB_PAT=<fine-grained-personal-access-token>
-```
-
-The configured `origin` may use either a GitHub HTTPS URL or a standard GitHub SSH URL. Regalator uses an HTTPS URL for the push without modifying the repository's remote configuration.
-
-### Expose Regalator
-
-Notion must be able to reach `REGALATOR_BACKEND_URL`. Use a public hostname or the server IP, including its protocol and port when required:
+Create a Notion OAuth integration and register:
 
 ```text
-<REGALATOR_BACKEND_URL>/api/notion/webhook
+https://regalator.example.com/api/notion/oauth/callback
 ```
 
-Prefer HTTPS and restrict access to the server as much as the Notion integration allows. The webhook currently has no application-level authentication and starts an agent for every valid payload it receives.
+Add `NOTION_CLIENT_ID` and `NOTION_CLIENT_SECRET` to `.regalator/.env`. Start
+Regalator and open the authorization URL that it prints. The resulting access
+token is stored under `.regalator/state/`.
 
-### Create the Notion OAuth integration
+Configure the Notion kanban automation to send its webhook to:
 
-1. Open [Notion integrations](https://www.notion.so/my-integrations) and create an OAuth integration.
-2. Register this redirect URI:
+```text
+https://regalator.example.com/api/notion/webhook
+```
 
-   ```text
-   <REGALATOR_BACKEND_URL>/api/notion/oauth/callback
-   ```
+The payload must provide the ticket page ID and URL as `data.id` and `data.url`.
+A duplicate trigger is ignored while an agent run for the same ticket is
+pending or running.
 
-3. Copy the integration credentials to `apps/back/.env`:
-
-   ```env
-   NOTION_CLIENT_ID=<notion-client-id>
-   NOTION_CLIENT_SECRET=<notion-client-secret>
-   ```
-
-4. Start Regalator with `bun run dev`.
-5. Open the Notion authorization URL printed by the Regalator backend.
-6. Authorize the integration for the workspace and ensure it can access the kanban database and its tickets.
-
-Regalator stores the resulting access token locally. Do not commit the token or `apps/back/.env`.
-
-### Create the kanban automation
-
-Choose a kanban status that starts the coding agent. A dedicated status such as `Ready for Regalator` is recommended because moving a ticket into it is an explicit action and avoids accidental runs.
-
-In the Notion kanban database:
-
-1. Create a new automation.
-2. Use a status change as its trigger.
-3. Configure it to run when a ticket enters the chosen trigger status.
-4. Add a webhook action with this URL:
-
-   ```text
-   <REGALATOR_BACKEND_URL>/api/notion/webhook
-   ```
-
-5. Save and enable the automation.
-
-The webhook payload must contain the ticket page ID and URL as `data.id` and `data.url`. Regalator ignores a duplicate trigger while an agent run for the same ticket is already pending or running.
-
-### Select the base branch
-
-Notion agent runs create a branch named `feature/notion-...` in a separate worktree. The default base branch is `main`; it can be changed from the Regalator settings interface to any existing local branch.
-
-`REGALATOR_WORKTREES_PATH` controls where these temporary worktrees are created. Keep that directory outside the managed repository.
+Notion agent runs use `main` as their default base branch. Change it in the
+Regalator settings interface. Temporary worktrees default to the sibling
+directory `<project>-worktrees`; an absolute override can be stored as
+`worktreesPath` in `.regalator/config.json`.
 
 ## Branch lifecycle
 
-When a branch is selected in the embedded interface, Regalator:
+When a branch is selected, Regalator:
 
 1. verifies that the managed scripts exist on the target branch;
-2. stops the current project with `SIGTERM`;
+2. stops the current project;
 3. checks out the selected branch;
 4. runs the checkout hook;
 5. starts the managed project;
-6. waits for `REGALATOR_PROJECT_HEALTHCHECK_URL`;
-7. completes the UI request when the project is ready.
+6. waits for the healthcheck;
+7. reports that the branch is ready.
 
-If preparation or startup fails, Regalator restores the previous branch and runs its hook, startup script, and readiness check again.
+If preparation or startup fails, Regalator restores and restarts the previous
+branch. Pulling a branch follows the same stop, prepare, start, and readiness
+sequence. If the pull fails, the unchanged project is restarted.
 
-The pull button fetches and fast-forwards the current branch from `origin`. Regalator stops the project before pulling, then runs the checkout hook and starts the project again. If the pull fails, the unchanged project is restarted.
+## Develop Regalator
+
+Install dependencies and run the complete validation suite:
+
+```sh
+bun install
+bun run check-types
+bun test
+bun run build
+```
+
+To exercise the unpublished CLI against a test repository, build the frontend
+once and invoke the source entrypoint from that repository:
+
+```sh
+bun /absolute/path/to/regalator/packages/cli/src/index.ts setup
+bun /absolute/path/to/regalator/packages/cli/src/index.ts start
+```
+
+Build a publishable package archive with:
+
+```sh
+cd packages/cli
+bun pm pack
+```

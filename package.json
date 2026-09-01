@@ -6,7 +6,9 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types"
+    "check-types": "turbo run check-types",
+    "test": "bun test",
+    "test:package": "bun run build && bun packages/cli/test/package-smoke.ts"
   },
   "devDependencies": {
     "bun-types": "latest",

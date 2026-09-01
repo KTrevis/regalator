@@ -1,12 +1,21 @@
 import { resolve } from "node:path";
-import { environment } from "./environment";
+import { readProjectConfig, resolveWorktreesPath } from "./project-config";
+import { getProjectFiles } from "./project-files";
 
-const projectPath = environment.projectPath;
+const repoPath = resolve(process.cwd());
+const projectFiles = getProjectFiles(repoPath);
 
 export const CONFIG = {
-  repoPath: resolve(projectPath),
-  worktreesPath: resolve(
-    environment.worktreesPath ?? `${projectPath}-worktrees`,
-  ),
+  repoPath,
+  projectFiles,
+  get project() {
+    return readProjectConfig(repoPath);
+  },
+  get worktreesPath() {
+    return resolveWorktreesPath(
+      repoPath,
+      readProjectConfig(repoPath).worktreesPath,
+    );
+  },
   defaultBaseBranch: "main",
 } as const;

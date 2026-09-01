@@ -7,7 +7,6 @@ export type ManagedProjectProcess = ReturnType<typeof Bun.spawn>;
 
 export function spawnManagedProject(repositoryPath: string) {
   const startScriptPath = getManagedProjectScriptPath(repositoryPath, "start");
-  if (!startScriptPath) return;
 
   return Bun.spawn(["/bin/sh", startScriptPath], {
     cwd: repositoryPath,
