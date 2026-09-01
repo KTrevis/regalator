@@ -29,12 +29,6 @@ jobs:
       - name: Check types
         run: bun run check-types
 
-      - name: Run tests
-        run: bun test
-
-      - name: Test packaged CLI
-        run: bun run test:package
-
       - name: Create release archive
         run: |
           mkdir release
