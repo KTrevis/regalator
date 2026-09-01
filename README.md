@@ -42,7 +42,7 @@ REGALATOR_PROJECT_HEALTHCHECK_URL=http://127.0.0.1:8080
 REGALATOR_WORKTREES_PATH=/absolute/path/to/project-worktrees
 ```
 
-`REGALATOR_BACKEND_URL` is the public Regalator backend origin, including its protocol and without `/api` or a trailing slash.
+`REGALATOR_BACKEND_URL` is the public origin through which the Regalator backend is exposed, including its protocol and without `/api` or a trailing slash. Prefer the shared-origin setup described below.
 
 `REGALATOR_PROJECT_PATH` is the absolute path to the Git repository that Regalator manages. The checkout hook and startup script live in that repository under `scripts/regalator/`.
 
@@ -108,15 +108,39 @@ bun run dev
 
 By default, the backend listens on `http://localhost:3000` and the frontend on `http://localhost:5173`. Make sure these ports do not conflict with the managed project. Set `PORT` for the Regalator backend if port 3000 is unavailable.
 
+### Expose a single public origin
+
+Expose the Regalator frontend and backend through the same public origin. Route `/api` requests to the backend and all other requests to the frontend. With the default local ports, the corresponding Caddy configuration is:
+
+```caddyfile
+regalator.example.com {
+  handle /api/* {
+    reverse_proxy 127.0.0.1:3000
+  }
+
+  handle {
+    reverse_proxy 127.0.0.1:5173
+  }
+}
+```
+
+Configure that origin once in the backend environment:
+
+```env
+REGALATOR_BACKEND_URL=https://regalator.example.com
+```
+
+The frontend always sends API requests to `window.location.origin`, so no frontend environment variable is required for the backend URL.
+
 ## Embed Regalator in the managed website
 
 Add the following element to the managed website, ideally near the end of `<body>`:
 
 ```html
-<script src="<REGALATOR_FRONTEND_URL>/embed.js" async></script>
+<script src="<REGALATOR_BACKEND_URL>/embed.js" async></script>
 ```
 
-Replace `<REGALATOR_FRONTEND_URL>` with the public origin that serves the Regalator frontend. The script injects a movable Regalator launcher and opens the interface in an iframe.
+Replace `<REGALATOR_BACKEND_URL>` with the shared public origin configured in `apps/back/.env`. The script injects a movable Regalator launcher and opens the interface in an iframe.
 
 When embedding Regalator:
 

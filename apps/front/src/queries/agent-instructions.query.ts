@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { getApiBaseUrl } from "../lib/eden";
 
 type SendInstructionsInput = {
   instruction: string;
@@ -24,7 +23,7 @@ async function sendInstructions(
   input: SendInstructionsInput,
 ) {
   const response = await fetch(
-    `${getApiBaseUrl()}/api/agent-runs/${encodeURIComponent(agentRunId)}/instructions`,
+    `/api/agent-runs/${encodeURIComponent(agentRunId)}/instructions`,
     {
       method: "POST",
       headers: { "content-type": "application/json" },
