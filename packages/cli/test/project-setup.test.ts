@@ -10,7 +10,6 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { $ } from "bun";
-import { assertScriptTemplatesCompleted } from "../../../apps/back/src/managed-project/script-template";
 import { getProjectFiles } from "../../../apps/back/src/project-files";
 import { findGitRepositoryRoot } from "../src/git-repository";
 import { setupProject, validateProjectConfig } from "../src/project-setup";
@@ -72,23 +71,28 @@ test("rejects invalid configuration", () => {
   ).toThrow();
 });
 
-test("preflight rejects templates and accepts completed scripts", async () => {
+test("generated script templates explain how to configure themselves", async () => {
   const repositoryPath = await createTemporaryDirectory();
   const files = getProjectFiles(repositoryPath);
   await setupProject(repositoryPath, config);
 
-  await expect(assertScriptTemplatesCompleted(repositoryPath)).rejects.toThrow(
-    "Complete the generated managed project scripts",
+  const checkoutHook = Bun.spawn(["/bin/sh", files.checkoutHook], {
+    cwd: repositoryPath,
+    stderr: "pipe",
+  });
+  const startupScript = Bun.spawn(["/bin/sh", files.startupScript], {
+    cwd: repositoryPath,
+    stderr: "pipe",
+  });
+
+  expect(await checkoutHook.exited).toBe(1);
+  expect(await startupScript.exited).toBe(1);
+  expect(await new Response(checkoutHook.stderr).text()).toContain(
+    "Edit .regalator/checkout-hook.sh before starting Regalator.",
   );
-
-  await Promise.all([
-    writeFile(files.checkoutHook, "#!/bin/sh\nset -eu\nexit 0\n"),
-    writeFile(files.startupScript, "#!/bin/sh\nset -eu\nexec server\n"),
-  ]);
-
-  await expect(
-    assertScriptTemplatesCompleted(repositoryPath),
-  ).resolves.toBeUndefined();
+  expect(await new Response(startupScript.stderr).text()).toContain(
+    "Edit .regalator/startup.sh before starting Regalator.",
+  );
 });
 
 async function createTemporaryDirectory() {

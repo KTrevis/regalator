@@ -13,9 +13,7 @@ export async function runStart(directory: string) {
 
   const config = await readExistingConfig(repositoryPath);
   if (!config) {
-    throw new Error(
-      "Run `bunx @regalator/cli setup` before starting Regalator.",
-    );
+    throw new Error("Run `regalator setup` before starting Regalator.");
   }
 
   const files = getProjectFiles(repositoryPath);

@@ -36,13 +36,15 @@ test("initializes a new database and can run again", async () => {
 
 test("requires GitHub and Notion secrets", () => {
   expect(() => validateRequiredSecrets({})).toThrow(
-    "GITHUB_PAT, NOTION_CLIENT_ID, NOTION_CLIENT_SECRET",
+    "GITHUB_PAT, NOTION_CLIENT_ID, NOTION_CLIENT_SECRET, NOTION_ACCESS_TOKEN, NOTION_REFRESH_TOKEN",
   );
   expect(() =>
     validateRequiredSecrets({
       GITHUB_PAT: "github-token",
       NOTION_CLIENT_ID: "notion-id",
       NOTION_CLIENT_SECRET: "notion-secret",
+      NOTION_ACCESS_TOKEN: "notion-access-token",
+      NOTION_REFRESH_TOKEN: "notion-refresh-token",
     }),
   ).not.toThrow();
 });

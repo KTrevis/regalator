@@ -1,5 +1,5 @@
 import { Client } from "@notionhq/client";
-import { getNotionTokenPath } from "./notion.oauth";
+import { environment } from "../environment";
 
 let cachedNotionClient: Client | undefined;
 
@@ -8,16 +8,10 @@ export async function getNotionClient() {
     return cachedNotionClient;
   }
 
-  const tokenPath = getNotionTokenPath();
-  const tokenFile = Bun.file(tokenPath);
-  const token = (await tokenFile.exists())
-    ? (await tokenFile.text()).trim()
-    : "";
+  const token = environment.notionAccessToken;
 
   if (!token) {
-    throw new Error(
-      `Notion token file not found at ${tokenPath}. Generate it from the Notion OAuth setup URL logged by the back end.`,
-    );
+    throw new Error("Missing NOTION_ACCESS_TOKEN. Run Regalator setup again.");
   }
 
   cachedNotionClient = new Client({ auth: token });

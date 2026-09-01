@@ -63,7 +63,7 @@ try {
     ),
     writeFile(
       resolve(regalatorDirectory, ".env"),
-      "GITHUB_PAT=test\nNOTION_CLIENT_ID=test\nNOTION_CLIENT_SECRET=test\n",
+      "GITHUB_PAT=test\nNOTION_CLIENT_ID=test\nNOTION_CLIENT_SECRET=test\nNOTION_ACCESS_TOKEN=test\nNOTION_REFRESH_TOKEN=test\n",
       { mode: 0o600 },
     ),
   ]);

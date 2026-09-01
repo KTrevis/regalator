@@ -2,15 +2,12 @@ import { constants } from "node:fs";
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { isAbsolute } from "node:path";
 import { PROJECT_CONFIG_SCHEMA, type ProjectConfig } from "@regalator/shared";
-import {
-  getProjectFiles,
-  SCRIPT_TEMPLATE_MARKER,
-} from "../../../apps/back/src/project-files";
+import { getProjectFiles } from "../../../apps/back/src/project-files";
 
 const CHECKOUT_HOOK_TEMPLATE = `#!/bin/sh
 set -eu
 
-# ${SCRIPT_TEMPLATE_MARKER}: replace this template with the finite commands
+# Replace this template with the finite commands
 # that prepare the selected branch. This script must be idempotent and finish
 # within five minutes. REGALATOR_BRANCH_ID contains a stable branch identifier.
 
@@ -21,7 +18,7 @@ exit 1
 const STARTUP_SCRIPT_TEMPLATE = `#!/bin/sh
 set -eu
 
-# ${SCRIPT_TEMPLATE_MARKER}: replace this template with the long-running command
+# Replace this template with the long-running command
 # that starts the managed project. Keep the process in the foreground and use
 # exec when possible so that SIGTERM and SIGINT are forwarded correctly.
 
@@ -32,6 +29,8 @@ exit 1
 const ENVIRONMENT_TEMPLATE = `GITHUB_PAT=
 NOTION_CLIENT_ID=
 NOTION_CLIENT_SECRET=
+NOTION_ACCESS_TOKEN=
+NOTION_REFRESH_TOKEN=
 `;
 
 const GITIGNORE_TEMPLATE = `.env

@@ -2,7 +2,6 @@ import { stat } from "node:fs/promises";
 import { isAbsolute, relative, sep } from "node:path";
 import { $ } from "bun";
 import { getProjectFiles } from "../project-files";
-import { assertScriptTemplatesCompleted } from "./script-template";
 
 const MANAGED_PROJECT_SCRIPTS = {
   checkoutHook: {
@@ -34,8 +33,6 @@ export async function assertManagedProjectScriptsExist(repositoryPath: string) {
       `Managed project scripts not found: ${formatScripts(missingScripts)}.`,
     );
   }
-
-  await assertScriptTemplatesCompleted(repositoryPath);
 }
 
 export async function assertManagedProjectScriptsExistOnBranch(

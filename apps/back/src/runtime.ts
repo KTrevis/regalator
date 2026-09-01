@@ -6,7 +6,6 @@ import {
   startManagedProject,
   stopManagedProject,
 } from "./managed-project/managed-project.service";
-import { logNotionSetupInstructions } from "./notion/notion.oauth";
 
 export async function startRegalator() {
   await mkdir(CONFIG.projectFiles.stateDirectory, { recursive: true });
@@ -15,7 +14,6 @@ export async function startRegalator() {
   app.listen(port);
 
   console.log(`Regalator is listening on http://localhost:${port}`);
-  logNotionSetupInstructions();
 
   void startManagedProject().catch((error) => {
     console.error("Failed to start the managed project.", error);

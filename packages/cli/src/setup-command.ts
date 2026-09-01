@@ -1,13 +1,20 @@
 import { cancel, isCancel, text } from "@clack/prompts";
 import type { ProjectConfig } from "@regalator/shared";
 import { findGitRepositoryRoot } from "./git-repository";
+import { setupGitHubPat } from "./github-setup";
+import { setupNotionOAuth } from "./notion-setup";
 import { readExistingConfig, setupProject } from "./project-setup";
+
+const START_COMMAND =
+  "bunx --package https://github.com/KTrevis/regalator/releases/latest/download/regalator-cli.tgz regalator start";
 
 export async function runSetup(directory: string) {
   const repositoryPath = await findGitRepositoryRoot(directory);
   const existingConfig = await readExistingConfig(repositoryPath);
   const config = existingConfig ?? (await promptForConfig(repositoryPath));
   const result = await setupProject(repositoryPath, config);
+  await setupGitHubPat(result.files.environment);
+  await setupNotionOAuth(config, result.files.environment);
 
   printSetupSummary(repositoryPath, result);
 }
@@ -80,7 +87,6 @@ function printSetupSummary(
 ) {
   const { config, created, files } = result;
   const webhookUrl = `${config.backendUrl}/api/notion/webhook`;
-  const redirectUrl = `${config.backendUrl}/api/notion/oauth/callback`;
 
   console.log(`\nRegalator is configured for ${repositoryPath}.`);
   if (created.length > 0) {
@@ -94,11 +100,7 @@ function printSetupSummary(
   console.log(`
 Next steps:
 1. Complete ${files.checkoutHook} and ${files.startupScript}.
-2. Create a fine-grained GitHub personal access token for this repository with Contents: Read and write, then add it as GITHUB_PAT in ${files.environment}.
-3. Create a Notion OAuth integration and add NOTION_CLIENT_ID and NOTION_CLIENT_SECRET to ${files.environment}.
-4. Register this Notion redirect URI: ${redirectUrl}
-5. Configure the Notion automation webhook: ${webhookUrl}
-6. Expose ${config.backendUrl} through your preferred public HTTPS proxy or tunnel.
-7. Commit the versioned .regalator files and propagate them to every branch that Regalator may select.
-8. Start Regalator: bunx @regalator/cli start`);
+2. Configure the Notion automation webhook: ${webhookUrl}
+3. Commit the versioned .regalator files and propagate them to every branch that Regalator may select.
+4. Start Regalator: ${START_COMMAND}`);
 }

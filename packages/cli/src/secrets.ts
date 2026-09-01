@@ -5,6 +5,8 @@ const REQUIRED_SECRETS = [
   "GITHUB_PAT",
   "NOTION_CLIENT_ID",
   "NOTION_CLIENT_SECRET",
+  "NOTION_ACCESS_TOKEN",
+  "NOTION_REFRESH_TOKEN",
 ] as const;
 
 export async function loadSecrets(path: string) {

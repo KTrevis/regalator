@@ -3,7 +3,9 @@ import { CONFIG } from "./config";
 type EnvironmentVariableName =
   | "DATABASE_URL"
   | "GITHUB_PAT"
+  | "NOTION_ACCESS_TOKEN"
   | "NOTION_CLIENT_ID"
+  | "NOTION_REFRESH_TOKEN"
   | "NOTION_CLIENT_SECRET"
   | "REGALATOR_WEB_ROOT";
 
@@ -33,6 +35,12 @@ export const environment = {
   },
   get notionClientSecret() {
     return readTrimmedEnvironmentVariable("NOTION_CLIENT_SECRET");
+  },
+  get notionAccessToken() {
+    return readTrimmedEnvironmentVariable("NOTION_ACCESS_TOKEN");
+  },
+  get notionRefreshToken() {
+    return readTrimmedEnvironmentVariable("NOTION_REFRESH_TOKEN");
   },
   get port() {
     return CONFIG.project.port;
