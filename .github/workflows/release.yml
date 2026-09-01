@@ -34,7 +34,7 @@ jobs:
           mkdir release
           cd packages/cli
           bun pm pack \
-            --filename ../../release/regalator-cli.tgz
+            --filename "$GITHUB_WORKSPACE/release/regalator-cli.tgz"
           cd ../../release
           sha256sum regalator-cli.tgz > regalator-cli.tgz.sha256
 
