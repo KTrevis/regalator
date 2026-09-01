@@ -21,8 +21,14 @@ Run the setup command from anywhere inside the Git repository that Regalator
 should manage:
 
 ```sh
-bunx @regalator/cli setup
+bunx \
+  --package https://github.com/KTrevis/regalator/releases/latest/download/regalator-cli.tgz \
+  regalator setup
 ```
+
+This downloads the CLI from the latest GitHub Release without adding Regalator
+to the managed project's `package.json` or lockfile. Replace `latest` with a
+specific tag such as `v0.5` to test a pinned release.
 
 The command finds the repository root, asks for the public Regalator URL and
 the managed project healthcheck, and creates:
@@ -44,7 +50,9 @@ Complete the generated shell scripts, add the requested GitHub and Notion
 credentials to `.regalator/.env`, then start Regalator:
 
 ```sh
-bunx @regalator/cli start
+bunx \
+  --package https://github.com/KTrevis/regalator/releases/latest/download/regalator-cli.tgz \
+  regalator start
 ```
 
 The start command initializes or migrates the local SQLite database and serves
@@ -206,3 +214,21 @@ Build a publishable package archive with:
 cd packages/cli
 bun pm pack
 ```
+
+## Publish a release
+
+The release workflow runs when a tag whose name starts with `v` is pushed. It
+checks the monorepo types, builds `regalator-cli.tgz`, generates its SHA-256
+checksum, and publishes both files in a GitHub Release.
+
+Create the tag from the exact commit that should be released, then push it:
+
+```sh
+git switch main
+git pull --ff-only
+git tag v0.6
+git push origin v0.6
+```
+
+Use a new tag for every attempt. Re-running a failed job uses the workflow from
+the commit associated with the original run, not newer changes on `main`.
